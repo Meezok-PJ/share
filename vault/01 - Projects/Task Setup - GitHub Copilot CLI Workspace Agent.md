@@ -34,6 +34,7 @@ workspace/
 |   |-- cheatsheets/
 |   `-- shared/
 `-- .github/
+    |-- AGENT.md
     |-- copilot-instructions.md
     `-- skills/
         `-- workspace-manager/
@@ -44,11 +45,15 @@ workspace/
 
 ## Component Details
 
-### 1. Copilot Agent Instructions
+### 1. Copilot Agent Definition
+- File: `workspace/.github/AGENT.md`
+- Purpose: High-level role specification and directory routing table for the Copilot agent.
+
+### 2. Copilot Agent Instructions
 - File: `workspace/.github/copilot-instructions.md`
 - Purpose: Defines system rules for Copilot CLI, directory taxonomy enforcement, and clean Git commit rules.
 
-### 2. Workspace Manager Skill
+### 3. Workspace Manager Skill
 - File: `workspace/.github/skills/workspace-manager/SKILL.md`
 - Purpose: Custom skill instructions for automatic routing of incoming files into designated folders.
 

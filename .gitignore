@@ -1,0 +1,14 @@
+# Ignore Chrome profile data
+chrome_profile/
+*.log
+
+# Ignore Obsidian workspace user settings
+vault/.obsidian/workspace*
+vault/.obsidian/cache/
+
+# Node / Temp / Python files
+node_modules/
+.DS_Store
+__pycache__/
+docker/__pycache__/
+workspace/*.tar.gz

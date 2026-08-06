@@ -1,0 +1,63 @@
+# Workspace Manager workflow
+# Enforces workspace/ taxonomy and commits placeholders when missing.
+name: Workspace Manager
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/AGENT.md'
+      - 'workspace/**'
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 4 * * 0' # weekly run (UTC)
+
+permissions:
+  contents: write
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Ensure workspace taxonomy and placeholders
+        run: |
+          set -euo pipefail
+          TAXDIRS=(
+            "workspace/projects"
+            "workspace/docs/homelab"
+            "workspace/docs/malware-lab"
+            "workspace/writeups/ctf"
+            "workspace/writeups/malware-analysis"
+            "workspace/notes/cheatsheets"
+            "workspace/notes/shared"
+          )
+
+          for d in "${TAXDIRS[@]}"; do
+            mkdir -p "$d"
+            if [ ! -f "$d/.gitkeep" ]; then
+              touch "$d/.gitkeep"
+              echo "Created $d/.gitkeep"
+            fi
+          done
+
+          # Stage only workspace changes
+          git add -- "workspace" || true
+
+          if git diff --staged --quiet; then
+            echo "No workspace changes to commit"
+            exit 0
+          fi
+
+          git config user.name "workspace-manager"
+          git config user.email "actions@users.noreply.github.com"
+
+          git commit -m "chore(workspace): initialize workspace directory taxonomy" -m "Create standard directories and placeholders\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+
+          # Push back to the same branch
+          git push origin HEAD:refs/heads/${{ github.ref_name }}

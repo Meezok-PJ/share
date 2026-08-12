@@ -3,14 +3,186 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <meta http-equiv="refresh" content="0; url=./workspace/notes/shared/why-now-is-the-time-to-build-your-ai-workspace.html">
-  <title>Redirecting to the AI Workspace article</title>
-  <script>
-    window.location.replace("./workspace/notes/shared/why-now-is-the-time-to-build-your-ai-workspace.html");
-  </script>
+  <meta name="description" content="A public library of technical articles, projects, homelab documentation, and cybersecurity writeups by Mohammed Al-Balushi.">
+  <title>Meezok Documentation Vault</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #11131c;
+      --surface-hover: #171b28;
+      --border: #1f2433;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --emerald: #10b981;
+      --cyan: #06b6d4;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.7 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+    header { border-bottom: 1px solid var(--border); }
+    .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { color: var(--muted); font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; }
+    .profile { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .9rem; }
+    .profile img { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--emerald); }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { color: var(--text); }
+    a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 4px; }
+
+    main { padding: 78px 0 72px; }
+    .eyebrow { margin: 0 0 14px; color: var(--emerald); font-size: .84rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1, h2, h3 { color: var(--text); line-height: 1.15; }
+    h1 { max-width: 850px; margin: 0; font-size: clamp(2.6rem, 7vw, 5.25rem); letter-spacing: -.055em; }
+    .intro { max-width: 710px; margin: 24px 0 0; color: #d7dbe4; font-size: clamp(1.05rem, 2vw, 1.28rem); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 18px;
+      border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-weight: 700; transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+    .button:hover { color: var(--text); background: var(--surface-hover); border-color: var(--cyan); transform: translateY(-2px); }
+    .button.primary { background: var(--emerald); border-color: var(--emerald); color: #062b22; }
+    .button.primary:hover { background: #34d399; border-color: #34d399; }
+
+    .section { margin-top: 88px; }
+    .section-header { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    h2 { margin: 0; font-size: clamp(1.65rem, 3vw, 2.2rem); letter-spacing: -.025em; }
+    .section-header p { max-width: 460px; margin: 0; color: var(--muted); font-size: .95rem; }
+
+    .feature {
+      display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(220px, .7fr); gap: 24px; margin-top: 22px;
+      padding: 30px; border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(135deg, #11131c 0%, #0d1820 100%);
+    }
+    .feature h3 { margin: 0; font-size: clamp(1.4rem, 3vw, 2.1rem); letter-spacing: -.025em; }
+    .feature p { margin: 14px 0 0; color: #d7dbe4; }
+    .feature-meta { align-self: end; color: var(--muted); font-size: .9rem; }
+    .feature-link { display: inline-block; margin-top: 22px; color: var(--emerald); font-weight: 700; }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 22px; }
+    .card {
+      display: flex; flex-direction: column; min-height: 210px; padding: 24px; border: 1px solid var(--border);
+      border-radius: 12px; background: var(--surface); color: var(--text); transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+    .card:hover { color: var(--text); background: var(--surface-hover); border-color: #32536a; transform: translateY(-4px); }
+    .card-label { color: var(--emerald); font-size: .78rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .card h3 { margin: 10px 0 0; font-size: 1.25rem; }
+    .card p { margin: 10px 0 0; color: var(--muted); font-size: .94rem; }
+    .card span:last-child { margin-top: auto; padding-top: 20px; color: var(--cyan); font-size: .92rem; font-weight: 700; }
+
+    .notice { margin-top: 22px; padding: 18px 20px; border-left: 3px solid var(--emerald); background: var(--surface); color: var(--muted); }
+    footer { padding: 32px 0 48px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+    .footer-row { display: flex; justify-content: space-between; gap: 20px; }
+
+    @media (max-width: 760px) {
+      main { padding-top: 54px; }
+      .feature, .grid { grid-template-columns: 1fr; }
+      .section-header { display: block; }
+      .section-header p { margin-top: 10px; }
+    }
+
+    @media (max-width: 480px) {
+      .profile span { display: none; }
+      .nav { min-height: 66px; }
+      .feature { padding: 24px; }
+      .footer-row { display: block; }
+      .footer-row p + p { margin-top: 10px; }
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecting to <a href="./workspace/notes/shared/why-now-is-the-time-to-build-your-ai-workspace.html">Why Now Is the Time to Build Your AI Workspace</a>.</p>
+  <header>
+    <div class="shell nav">
+      <div class="brand">Meezok Documentation Vault</div>
+      <a class="profile" href="https://github.com/Meezok-PJ" rel="noopener">
+        <img src="https://github.com/Meezok-PJ.png" alt="">
+        <span>Mohammed Al-Balushi</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="shell">
+    <p class="eyebrow">Public technical library</p>
+    <h1>Systems, security, and practical AI work.</h1>
+    <p class="intro">A curated documentation vault for AI workspace architecture, homelab engineering, cybersecurity research, projects, and technical references.</p>
+    <div class="actions">
+      <a class="button primary" href="#library">Browse documentation</a>
+      <a class="button" href="https://github.com/Meezok-PJ/share" rel="noopener">Open GitHub repository</a>
+    </div>
+
+    <section class="section" aria-labelledby="featured-title">
+      <div class="section-header">
+        <h2 id="featured-title">Featured article</h2>
+        <p>Published notes about building durable, useful systems around modern AI tools.</p>
+      </div>
+      <article class="feature">
+        <div>
+          <p class="eyebrow">AI workspace</p>
+          <h3>Why Now Is the Time to Build Your AI Workspace</h3>
+          <p>A practical argument for durable context, reusable skills, local-first boundaries, and portable workflows beyond a single chat window.</p>
+          <a class="feature-link" href="./workspace/notes/shared/why-now-is-the-time-to-build-your-ai-workspace.html">Read the article</a>
+        </div>
+        <p class="feature-meta">Article<br>AI systems and workflow design</p>
+      </article>
+    </section>
+
+    <section class="section" id="library" aria-labelledby="library-title">
+      <div class="section-header">
+        <h2 id="library-title">Documentation library</h2>
+        <p>Each collection opens its public source directory on GitHub for reliable browsing and file history.</p>
+      </div>
+      <div class="grid">
+        <a class="card" href="https://github.com/Meezok-PJ/share/tree/main/workspace/projects" rel="noopener">
+          <span class="card-label">Build</span>
+          <h3>Projects</h3>
+          <p>Public tools, automation, source code, and technical experiments.</p>
+          <span>Browse projects</span>
+        </a>
+        <a class="card" href="https://github.com/Meezok-PJ/share/tree/main/workspace/docs/homelab" rel="noopener">
+          <span class="card-label">Infrastructure</span>
+          <h3>Homelab documentation</h3>
+          <p>Linux systems, virtualization, networking, and self-hosted infrastructure guides.</p>
+          <span>Browse homelab docs</span>
+        </a>
+        <a class="card" href="https://github.com/Meezok-PJ/share/tree/main/workspace/notes/cheatsheets" rel="noopener">
+          <span class="card-label">Reference</span>
+          <h3>Cheatsheets</h3>
+          <p>Command references and concise technical guides for repeatable work.</p>
+          <span>Browse cheatsheets</span>
+        </a>
+        <a class="card" href="https://github.com/Meezok-PJ/share/tree/main/workspace/writeups/ctf" rel="noopener">
+          <span class="card-label">Security</span>
+          <h3>CTF writeups</h3>
+          <p>Challenge walkthroughs, methodology, and investigation notes.</p>
+          <span>Browse CTF writeups</span>
+        </a>
+        <a class="card" href="https://github.com/Meezok-PJ/share/tree/main/workspace/writeups/malware-analysis" rel="noopener">
+          <span class="card-label">Analysis</span>
+          <h3>Malware analysis</h3>
+          <p>Public reverse-engineering reports and threat-analysis documentation.</p>
+          <span>Browse analysis writeups</span>
+        </a>
+        <a class="card" href="https://meezok-pj.github.io/Mywebsite/" rel="noopener">
+          <span class="card-label">Profile</span>
+          <h3>Portfolio website</h3>
+          <p>Professional portfolio, technical focus areas, and current public work.</p>
+          <span>Visit portfolio</span>
+        </a>
+      </div>
+      <p class="notice">This site intentionally contains public-safe material only. Private vault notes, credentials, internal infrastructure details, raw telemetry, and sensitive samples are excluded.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>Maintained by <a href="https://github.com/Meezok-PJ" rel="noopener">Mohammed Al-Balushi</a>.</p>
+      <p><a href="https://github.com/Meezok-PJ/share" rel="noopener">Repository</a></p>
+    </div>
+  </footer>
 </body>
 </html>

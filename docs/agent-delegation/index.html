@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A practical pattern for using Cursor or Claude Code as policy controllers for lower-cost or local AI workers with scenario-specific context and verified outputs.">
+  <title>Policy-Driven Agent Delegation | Mohammed Al-Balushi</title>
+  <style>
+    :root { --bg:#08090d; --surface:#11131c; --surface-strong:#161b27; --border:#1f2433; --text:#f3f4f6; --muted:#9ca3af; --emerald:#10b981; --cyan:#06b6d4; --danger:#fca5a5; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--text); font:17px/1.7 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--cyan); }
+    a:hover { color:var(--text); }
+    a:focus-visible,button:focus-visible { outline:3px solid var(--cyan); outline-offset:3px; border-radius:4px; }
+    .progress { position:fixed; inset:0 auto auto 0; z-index:20; width:0; height:3px; background:linear-gradient(90deg,var(--emerald),var(--cyan)); }
+    .shell { width:min(1120px,calc(100% - 32px)); margin:0 auto; }
+    header { border-bottom:1px solid var(--border); }
+    .nav { min-height:76px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .brand { color:var(--muted); font-size:.82rem; letter-spacing:.1em; text-transform:uppercase; text-decoration:none; }
+    .profile { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.9rem; text-decoration:none; }
+    .profile img { width:34px; height:34px; border-radius:50%; border:2px solid var(--emerald); }
+    .article-layout { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:56px; padding:62px 0 72px; }
+    main { min-width:0; }
+    .eyebrow { margin:0 0 14px; color:var(--emerald); font-size:.84rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--text); line-height:1.17; }
+    h1 { max-width:920px; margin:0; font-size:clamp(2.55rem,6.5vw,4.8rem); letter-spacing:-.05em; }
+    h2 { margin:70px 0 20px; padding-top:12px; font-size:clamp(1.65rem,3vw,2.15rem); letter-spacing:-.03em; border-top:1px solid var(--border); }
+    h3 { margin:34px 0 12px; font-size:1.2rem; }
+    p,li { color:#d7dbe4; }
+    li + li { margin-top:8px; }
+    .lead { max-width:780px; margin:24px 0 0; font-size:clamp(1.08rem,2vw,1.3rem); color:#d7dbe4; }
+    .meta { display:flex; flex-wrap:wrap; gap:10px 18px; margin:28px 0 0; color:var(--muted); font-size:.92rem; }
+    .meta span { display:inline-flex; align-items:center; gap:8px; }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--emerald); }
+    blockquote { margin:32px 0; padding:18px 22px; border-left:3px solid var(--emerald); background:var(--surface); color:var(--muted); }
+    blockquote p { margin:0; color:var(--text); font-size:1.08rem; }
+    .callout { margin:28px 0; padding:18px 20px; border:1px solid var(--border); border-left:3px solid var(--cyan); border-radius:10px; background:var(--surface); }
+    .callout strong { color:var(--text); }
+    .callout p { margin:6px 0 0; color:var(--muted); }
+    figure { margin:32px 0; }
+    figure img { display:block; width:100%; height:auto; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+    figcaption { margin-top:10px; color:var(--muted); font-size:.9rem; }
+    .diagram { display:grid; gap:12px; margin:30px 0; padding:24px; border:1px solid var(--border); border-radius:14px; background:linear-gradient(135deg,#11131c,#0c1820); }
+    .node { position:relative; padding:14px 16px; border:1px solid #32536a; border-radius:8px; background:#0d131d; color:#d7dbe4; font-weight:700; }
+    .node small { display:block; margin-top:3px; color:var(--muted); font-weight:400; }
+    .node:not(:last-child)::after { position:absolute; left:50%; bottom:-13px; color:var(--emerald); content:"↓"; transform:translateX(-50%); }
+    .node.policy { border-color:var(--emerald); }
+    .node.review { border-color:var(--cyan); }
+    .node.optional { border-color:#435064; }
+    .trust-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:26px 0; }
+    .trust-card { padding:22px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+    .trust-card h3 { margin:0; }
+    .trust-card p { margin:10px 0 0; color:var(--muted); }
+    .trust-card.trusted { border-top:3px solid var(--emerald); }
+    .trust-card.worker { border-top:3px solid var(--cyan); }
+    table { width:100%; margin:26px 0; border-collapse:collapse; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    th,td { padding:13px 15px; text-align:left; vertical-align:top; border-bottom:1px solid var(--border); }
+    th { background:var(--surface); color:var(--emerald); }
+    tr:last-child td { border-bottom:0; }
+    pre { position:relative; overflow:auto; margin:26px 0; padding:20px; border:1px solid var(--border); border-radius:12px; background:#0d0f16; }
+    code { color:#b8f6dc; background:var(--surface); padding:.13em .34em; border-radius:5px; font-family:ui-monospace,"SF Mono",Consolas,monospace; }
+    pre code { padding:0; background:transparent; white-space:pre; }
+    .copy { position:absolute; top:10px; right:10px; padding:5px 9px; border:1px solid var(--border); border-radius:6px; background:var(--surface-strong); color:var(--text); cursor:pointer; font:inherit; font-size:.78rem; }
+    .checklist { list-style:none; padding:0; }
+    .checklist li { position:relative; padding-left:28px; }
+    .checklist li::before { position:absolute; left:0; color:var(--emerald); content:"✓"; font-weight:800; }
+    .warning li::before { color:var(--danger); content:"×"; }
+    .toc { position:sticky; top:28px; align-self:start; padding-left:18px; border-left:1px solid var(--border); }
+    .toc h2 { margin:0 0 12px; padding:0; border:0; font-size:.84rem; color:var(--muted); letter-spacing:.09em; text-transform:uppercase; }
+    .toc a { display:block; padding:5px 0; color:var(--muted); font-size:.88rem; text-decoration:none; }
+    .toc a:hover,.toc a.active { color:var(--emerald); }
+    footer { padding:32px 0 48px; border-top:1px solid var(--border); color:var(--muted); font-size:.9rem; }
+    .footer-row { display:flex; justify-content:space-between; gap:20px; }
+    @media (max-width:860px) { .article-layout { grid-template-columns:1fr; gap:0; } .toc { display:none; } }
+    @media (max-width:640px) { body { font-size:16px; } .article-layout { padding-top:42px; } .trust-grid { grid-template-columns:1fr; } .nav { min-height:66px; } .profile span { display:none; } th,td { padding:11px; } }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <header>
+    <div class="shell nav">
+      <a class="brand" href="../">Meezok Documentation Vault</a>
+      <a class="profile" href="https://github.com/Meezok-PJ" rel="noopener">
+        <img src="../assets/mohammed-al-balushi-profile.png" alt="">
+        <span>Mohammed Al-Balushi</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="shell article-layout">
+    <main id="article">
+      <p class="eyebrow">AI systems and security</p>
+      <h1>Policy-Driven Agent Delegation</h1>
+      <p class="lead">How to use Cursor or Claude Code as policy controllers for lower-cost and local AI workers without giving every worker your workspace, credentials, or Git history.</p>
+      <div class="meta"><span><i class="dot"></i> Practical architecture</span><span>August 14, 2026</span><span>8 min read</span></div>
+
+      <blockquote><p>Delegate the work, not the authority.</p></blockquote>
+
+      <p>AI agents can browse documentation, write code, run tests, and use command-line tools. That makes a useful workflow possible: one agent can prepare a narrow task for another agent to perform.</p>
+      <p>It also creates a security problem. If the second agent receives the same workspace, credentials, browser session, Git access, and filesystem visibility as the first one, delegation expands the attack surface instead of reducing work. A careful prompt helps, but a prompt is not an access-control system.</p>
+      <p>A safer pattern is policy-driven delegation. A trusted coordinator turns a request into a small task contract, a restricted worker performs only that task, and the result is reviewed before it reaches a real project.</p>
+
+      <h2 id="agent-level">Agent-level zero trust</h2>
+      <p>This is an agent-level control pattern, not a claim that Cursor, Claude Code, or any other product is automatically trusted.</p>
+      <p>Cursor or Claude Code can act as the policy controller because they understand the active project and the user’s request. Their job is to select only the context that fits the scenario, create the task contract, and validate the result. A cheaper cloud model or local model can then act as a dedicated worker for one tightly defined task.</p>
+      <p>For example, a controller may receive a request to create a parser. It can give the worker only the input format, expected output, a small representative fixture, and acceptance checks. The worker does not need the full repository, prior chats, credentials, personal vault, or permission to commit.</p>
+      <pre><button class="copy" type="button">Copy</button><code>User goal
+  -> Cursor or Claude Code as policy controller
+  -> scenario-specific context package and task contract
+  -> lower-cost cloud model or local model as dedicated worker
+  -> artifacts and verification evidence
+  -> controller review and optional human-approved integration</code></pre>
+
+      <h2 id="policy">Why a prompt needs a policy layer</h2>
+      <p>An agent can misunderstand a request, follow harmful instructions in external content, select an unrelated file, or produce an incorrect result with confidence. The risk grows when the task includes shell access, network access, code generation, or Git operations.</p>
+      <p>Natural-language instructions such as “do not access private files” are not enough. The boundary must be enforced outside the model:</p>
+      <ul>
+        <li>Give the worker only the information needed for one task.</li>
+        <li>Hide the main workspace, personal notes, credentials, backups, SSH configuration, browser data, and Git remotes.</li>
+        <li>Use a defined output directory instead of broad write access.</li>
+        <li>Treat the worker result as untrusted until a trusted controller validates it.</li>
+      </ul>
+      <div class="callout"><strong>This is not about assuming every model is malicious.</strong><p>It is about designing for mistakes, prompt injection, tool misuse, and the normal uncertainty of autonomous systems.</p></div>
+
+      <h2 id="paths">Two trust paths</h2>
+      <div class="trust-grid">
+        <section class="trust-card trusted">
+          <h3>Policy controller</h3>
+          <p>Cursor or Claude Code can select scenario-specific context, create the task contract, and review returned artifacts. Git or publication remains behind direct human approval.</p>
+        </section>
+        <section class="trust-card worker">
+          <h3>Zero-trust worker</h3>
+          <p>A lower-cost cloud model, local model, or dedicated code agent researches, generates, analyzes, or tests one bounded task with only sanitized input and a dedicated output location.</p>
+        </section>
+      </div>
+      <p>The controller role is deliberately small. It does not give any product automatic authority to publish or commit. External workers stay in the zero-trust path and can be useful without becoming workspace administrators.</p>
+
+      <h2 id="contract">The task contract</h2>
+      <p>Before a worker runs, the coordinator creates a task contract. This is more than a prompt: it is an inspectable description of what the worker may receive, do, and return.</p>
+      <pre><button class="copy" type="button">Copy</button><code>Task ID
+Objective
+Approved input files
+Allowed public URLs, if network access is needed
+Output directory and required artifacts
+Selected model and approved fallback
+Prohibited actions
+Verification checks
+Stop conditions
+Human review requirement</code></pre>
+      <p>The contract prevents a vague request such as “research this tool” from turning into unrestricted browsing, local file discovery, or an unreviewed repository change.</p>
+
+      <h2 id="flow">The delegation flow</h2>
+      <figure>
+        <img src="../assets/agent-delegation-control-plane.png" alt="Illustration of a trusted policy controller routing narrowly scoped task packets to isolated worker sandboxes, then returning artifacts through a verification gate.">
+        <figcaption>A policy controller decides what each worker can receive and what must be verified before integration.</figcaption>
+      </figure>
+      <div class="diagram" role="img" aria-label="Human request flows through a trusted coordinator, task contract, isolated worker, validation, and optional human-approved integration.">
+        <div class="node">Human request<small>Defines the outcome and approves sensitive actions</small></div>
+        <div class="node policy">Trusted coordinator<small>Classifies the task and removes unrelated context</small></div>
+        <div class="node">Task contract and sanitized prompt<small>Records inputs, tools, outputs, and stop conditions</small></div>
+        <div class="node">Isolated worker<small>Completes only the narrow task</small></div>
+        <div class="node review">Artifact validation<small>Checks files, claims, tests, and scope compliance</small></div>
+        <div class="node optional">Optional approved integration<small>Happens only after human review</small></div>
+      </div>
+
+      <h2 id="isolation">Enforce the filesystem boundary</h2>
+      <p>A separate directory is not isolation by itself. If a worker runs under the same operating-system user and can see the rest of the filesystem, it may still read files outside its intended task.</p>
+      <p>An enforceable sandbox changes that. A lightweight Linux sandbox such as <a href="https://github.com/containers/bubblewrap">Bubblewrap</a> can provide a narrow filesystem view:</p>
+      <ul class="checklist">
+        <li>Task input is mounted read-only.</li>
+        <li>Task output is mounted writable.</li>
+        <li>Temporary working state is disposable.</li>
+        <li>The worker has a dedicated runtime profile.</li>
+        <li>The main workspace, vault, credentials, backups, and browser data are absent from its view.</li>
+      </ul>
+      <p>The important property is not the specific sandbox tool. The restriction must be enforced by the operating system, not requested in a prompt.</p>
+
+      <h2 id="example">A practical first task</h2>
+      <p>Documentation research is a good first delegated task because its goal is easy to define and its output can be reviewed. Cursor or Claude Code can translate a user request into a small context package for a lower-cost or local worker. The worker receives one official documentation root URL, permission to follow directly linked pages on that domain, and a requirement to cite source URLs for factual claims.</p>
+      <table>
+        <thead><tr><th>Worker receives</th><th>Worker does not receive</th></tr></thead>
+        <tbody>
+          <tr><td>Official documentation URL and defined article scope</td><td>Browser profile, credentials, or API keys</td></tr>
+          <tr><td>One output directory and required artifact names</td><td>Main workspace or personal knowledge base</td></tr>
+          <tr><td>Public-web access only when necessary</td><td>Git access or publication permission</td></tr>
+        </tbody>
+      </table>
+      <p>The controller then checks that the output contains only the required files, has no unexpected external assets or runtime requests, and keeps its claims within the approved source boundary.</p>
+
+      <h2 id="network">Network access is still a risk</h2>
+      <figure>
+        <img src="../assets/agent-delegation-boundaries.png" alt="Illustration showing a protected private workspace, a separate isolated worker with sanitized input and verified output, and an untrusted public network separated by a caution boundary.">
+        <figcaption>Filesystem isolation protects the private workspace, but network access needs its own explicit controls.</figcaption>
+      </figure>
+      <p>Remote models and online documentation require a network connection. Filesystem isolation does not automatically provide network isolation. Without an egress proxy or domain allowlist, a network-enabled worker may contact more destinations than the task intends.</p>
+      <ol>
+        <li>Deny network access unless the task requires it.</li>
+        <li>Record why each network task is allowed.</li>
+        <li>Limit approved sources in the worker prompt.</li>
+        <li>Add a domain-level egress allowlist or proxy before sensitive networked tasks.</li>
+        <li>Never give a networked worker private data merely because its filesystem view is limited.</li>
+      </ol>
+      <div class="callout"><strong>Important limitation:</strong><p>Filesystem isolation is a useful control, but it is not a complete network-security solution. “Zero trust” should describe verified controls, not a marketing label.</p></div>
+
+      <h2 id="validation">Validate artifacts, not confidence</h2>
+      <p>The worker’s final message is not the main evidence of success. The returned artifacts are.</p>
+      <div class="trust-grid">
+        <section class="trust-card">
+          <h3>For generated code</h3>
+          <ul class="checklist">
+            <li>Expected files exist with no unexpected extras.</li>
+            <li>Automated checks pass.</li>
+            <li>No credentials, private paths, or unexpected network calls are embedded.</li>
+          </ul>
+        </section>
+        <section class="trust-card">
+          <h3>For research</h3>
+          <ul class="checklist">
+            <li>Sources remain inside the approved domain.</li>
+            <li>Factual claims cite source material.</li>
+            <li>The requested format exists and is complete.</li>
+          </ul>
+        </section>
+      </div>
+
+      <h2 id="fallback">Safe fallback rules</h2>
+      <p>Fallback models help with temporary failures, but they should not make a task less accountable. Automatic retry is appropriate only for read-only or idempotent work, such as documentation research or generating a disposable artifact.</p>
+      <ul class="checklist">
+        <li>Record the selected model and approved fallback in the task manifest.</li>
+        <li>Retry only for timeout, rate limit, temporary provider overload, or server error.</li>
+      </ul>
+      <ul class="checklist warning">
+        <li>Stop for authentication or authorization failures.</li>
+        <li>Stop for an invalid model identifier or safety-policy block.</li>
+        <li>Stop before a task that publishes, submits data, commits code, or changes a real project.</li>
+      </ul>
+
+      <h2 id="start">Start with a small policy</h2>
+      <ol>
+        <li>Classify the request as trusted integration or zero-trust worker work.</li>
+        <li>Give the worker only a sanitized input package.</li>
+        <li>Use an enforced filesystem boundary.</li>
+        <li>Require predictable output artifacts.</li>
+        <li>Validate before copying anything into a real project.</li>
+        <li>Keep Git and publication behind explicit human approval.</li>
+      </ol>
+      <p>This makes lower-cost cloud models, local models, and external agents useful for focused research, prototypes, test generation, documentation, and isolated experiments while keeping authority with the person responsible for the workspace.</p>
+
+      <h2 id="limits">What this pattern does not solve</h2>
+      <ul>
+        <li>A sandbox must still be configured correctly.</li>
+        <li>Network isolation needs its own controls.</li>
+        <li>A worker can still generate unsafe or incorrect code inside its allowed output directory.</li>
+        <li>Human review remains necessary for security-sensitive, destructive, or public-facing actions.</li>
+      </ul>
+
+      <h2 id="conclusion">Conclusion</h2>
+      <p>Agent-to-agent workflows become practical when authority is separated from execution. Use one trusted coordinator to define policy and review results. Use isolated workers for narrow tasks. Give workers minimal context, an enforceable boundary, and a clear output contract. Then validate artifacts before they reach the real workspace.</p>
+      <p>That is how agents can work for agents without turning every prompt into a full-access automation account.</p>
+    </main>
+
+    <aside class="toc" aria-label="Table of contents">
+      <h2>On this page</h2>
+      <a href="#agent-level">Agent-level control</a>
+      <a href="#policy">Policy layer</a>
+      <a href="#paths">Trust paths</a>
+      <a href="#contract">Task contract</a>
+      <a href="#flow">Delegation flow</a>
+      <a href="#isolation">Filesystem boundary</a>
+      <a href="#example">Practical task</a>
+      <a href="#network">Network risk</a>
+      <a href="#validation">Validation</a>
+      <a href="#fallback">Fallback rules</a>
+      <a href="#start">Start small</a>
+      <a href="#limits">Limitations</a>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>Written by <a href="https://github.com/Meezok-PJ" rel="noopener">Mohammed Al-Balushi</a>.</p>
+      <p><a href="../">Back to documentation vault</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const progress = document.getElementById('progress');
+    const sections = [...document.querySelectorAll('main h2[id]')];
+    const links = [...document.querySelectorAll('.toc a')];
+
+    function updateArticleState() {
+      const maximum = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.width = `${maximum > 0 ? (window.scrollY / maximum) * 100 : 0}%`;
+      let current = sections[0]?.id;
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= 130) current = section.id;
+      }
+      links.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === `#${current}`));
+    }
+
+    document.querySelectorAll('pre').forEach((block) => {
+      const button = block.querySelector('.copy');
+      button?.addEventListener('click', async () => {
+        const text = block.querySelector('code')?.innerText ?? '';
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = 'Copied';
+        } catch {
+          button.textContent = 'Copy unavailable';
+        }
+        window.setTimeout(() => { button.textContent = 'Copy'; }, 1600);
+      });
+    });
+
+    window.addEventListener('scroll', updateArticleState, { passive: true });
+    updateArticleState();
+  </script>
+</body>
+</html>

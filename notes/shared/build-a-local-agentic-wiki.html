@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Idea-level guide to building a local agentic wiki over Markdown notes: search, screenshots, and grounded chat without a private lab dump.">
+  <title>Build a Local Agentic Wiki Over Your Notes</title>
+  <style>
+    :root { --bg:#08090d; --surface:#11131c; --border:#1f2433; --text:#f3f4f6; --muted:#9ca3af; --emerald:#10b981; --cyan:#06b6d4; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:17px/1.7 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .shell { width:min(960px, calc(100% - 32px)); margin:0 auto; }
+    header { padding:28px 0; border-bottom:1px solid var(--border); }
+    .brand { color:var(--muted); font-size:.9rem; letter-spacing:.08em; text-transform:uppercase; }
+    .author { display:flex; align-items:center; gap:12px; margin-top:18px; color:var(--muted); }
+    .author img { width:42px; height:42px; border-radius:50%; border:2px solid var(--emerald); }
+    .author a { color:var(--text); text-decoration:none; font-weight:700; }
+    main { padding:48px 0 72px; }
+    h1,h2,h3 { line-height:1.18; color:var(--text); }
+    h1 { font-size:clamp(2.3rem, 6vw, 4.3rem); margin:0 0 20px; letter-spacing:-.04em; }
+    h2 { font-size:1.7rem; margin-top:62px; padding-top:8px; border-top:1px solid var(--border); }
+    h3 { font-size:1.15rem; margin-top:34px; }
+    p,li { color:#d7dbe4; }
+    a { color:var(--cyan); }
+    blockquote { margin:28px 0; padding:16px 20px; border-left:3px solid var(--emerald); background:var(--surface); color:var(--muted); }
+    img { display:block; width:100%; height:auto; border:1px solid var(--border); border-radius:14px; margin:28px 0; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; margin:24px 0; overflow:hidden; border:1px solid var(--border); border-radius:12px; }
+    th,td { padding:12px 14px; text-align:left; vertical-align:top; border-bottom:1px solid var(--border); }
+    th { background:var(--surface); color:var(--emerald); }
+    code { color:#b8f6dc; background:var(--surface); padding:.15em .35em; border-radius:5px; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--border); border-radius:12px; background:#0d0f16; }
+    pre code { padding:0; background:transparent; }
+    footer { padding:28px 0 48px; border-top:1px solid var(--border); color:var(--muted); font-size:.9rem; }
+    .repo-link { display:inline-block; margin-top:12px; color:var(--emerald); font-weight:700; text-decoration:none; }
+    @media (max-width:640px) { body { font-size:16px; } main { padding-top:32px; } th,td { padding:10px; } }
+  
+    .nav-back { display:inline-block; margin-bottom:18px; color:var(--muted); font-size:.9rem; }
+    em { color:var(--muted); font-size:.95rem; }
+    hr { border:0; border-top:1px solid var(--border); margin:36px 0; }
+</style>
+</head>
+<body>
+  <header><div class="shell">
+    <div class="brand">AI Workspace Notes</div>
+    <div class="author">
+      <img src="https://github.com/Meezok-PJ.png" alt="Mohammed Al-Balushi GitHub profile">
+      <div>Written by <a href="https://github.com/Meezok-PJ" rel="noopener">Mohammed Al-Balushi</a><br><span>AI Security Developer and Cyber Operations Specialist</span></div>
+    </div>
+  </div></header>
+  <main class="shell">
+    <a class="nav-back" href="../../index.html">Back to documentation vault</a>
+    <h1>Build a Local Agentic Wiki Over Your Notes</h1>
+<blockquote>
+<p>A practical idea piece: turn a personal knowledge vault into a searchable, chat-capable wiki — without giving away a private lab recipe.</p>
+</blockquote>
+<p><img alt="Agentic Wiki note reader" src="assets/agentic-wiki-note-reader.png"></p>
+<p><em>Figure 1 — Note reader with vault metadata and a “Chat with this note” entry point.</em></p>
+<hr>
+<h2>Why bother?</h2>
+<p>Most people already have notes: Obsidian, Markdown folders, course writeups, lab journals. Search inside the editor is fine until you want:</p>
+<ol>
+<li><strong>A browser UI</strong> you can open on the LAN or through a tunnel</li>
+<li><strong>Semantic search</strong> (“where did I write about DNS tunnels?”)</li>
+<li><strong>Grounded chat</strong> that answers from <em>your</em> notes, with citations</li>
+</ol>
+<p>That combination is what I call an <strong>agentic wiki</strong>: the vault stays the source of truth; a derived index powers search + RAG. You still write in your editor. The wiki is a read-only lens.</p>
+<p>This article is intentionally <strong>idea-level</strong>. Exact hostnames, ports, passwords, folder layouts, and proprietary automation are omitted on purpose. Steal the architecture, invent your own wiring.</p>
+<hr>
+<h2>The shape of the system</h2>
+<pre><code class="language-text">  [ Markdown vault ] --read-only--&gt; [ Ingest + embed ]
+                                         |
+                                         v
+                                   [ Vector DB ]
+                                         |
+                    +--------------------+--------------------+
+                    |                    |                    |
+                 Search UI           Graph view          Note chat
+                 (filters)         (wikilinks)         (RAG modes)
+</code></pre>
+<p><strong>Four pieces, nothing exotic:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>Job</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vault</td>
+<td>Your Markdown notes (keep writing here)</td>
+</tr>
+<tr>
+<td>Indexer</td>
+<td>Watches files, parses frontmatter/wikilinks, embeds text</td>
+</tr>
+<tr>
+<td>Store</td>
+<td>Postgres + vector extension (or any pgvector-compatible store)</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>Search, reader, graph, chat panel</td>
+</tr>
+</tbody>
+</table>
+<p>Local models (via Ollama or similar) handle <strong>embeddings</strong> and optional <strong>chat</strong>. Cloud models are optional; the idea works fully offline.</p>
+<hr>
+<h2>Design principles that keep you sane</h2>
+<ol>
+<li><strong>Vault is sacred</strong> — mount it read-only into the indexer/UI stack. Never let the chat agent write back unless you explicitly build a “save draft” flow later.</li>
+<li><strong>Derived index, not a second brain</strong> — if the DB dies, regenerate from Markdown. Obsidian (or your editor) remains canonical.</li>
+<li><strong>PARA + domains</strong> — filter by life buckets (projects / areas / resources / archive) <em>and</em> by topic folders (red team, network, cloud, …). Path-based mapping beats fragile tags alone.</li>
+<li><strong>Same-origin API</strong> — if you expose the UI through Cloudflare Tunnel or LAN, the browser should call <code>/api/...</code> on the same host. Hardcoding <code>127.0.0.1</code> breaks remote clients.</li>
+<li><strong>Screenshots belong in the vault</strong> — Obsidian embeds (<code>![[Pasted image….png]]</code>) should resolve through a small media endpoint so the reader shows lab screenshots, not broken icons.</li>
+</ol>
+<p><img alt="Chat with this note panel" src="assets/agentic-wiki-chat-panel.png"></p>
+<p><em>Figure 2 — Note-scoped chat (Vault RAG / Note+links / Note only) with a local model picker. I’ll also record a short video of vault browsing + chat on my side.</em></p>
+<hr>
+<h2>Chat that stays honest</h2>
+<p>A useful default chat mode is <strong>Vault RAG</strong>:</p>
+<ul>
+<li>Always include the open note</li>
+<li>Pull a few semantic neighbors</li>
+<li>Stream the answer with citation chips</li>
+</ul>
+<p>Also offer <strong>Note only</strong> and <strong>Note + outbound links</strong> for days when you want maximum trust or tighter context.</p>
+<p>Pick a solid local instruct model for chat and a dedicated embed model for vectors. Let users switch chat models in the UI; filter out OCR/vision/embed-only names from the picker.</p>
+<hr>
+<h2>UI tone (skip the AI clutter)</h2>
+<p>If you ship a dashboard:</p>
+<ul>
+<li>One clear brand mark, not stacked logos</li>
+<li>Collapse advanced filters (domains, field tags) behind toggles</li>
+<li>Status strip: note count, index job, model health — not a telemetry wall</li>
+<li>Prefer calm motion (subtle particle atmosphere, fade-ins) over purple glow kits</li>
+<li>Add basic framebusting headers if the UI will sit on a tunnel</li>
+</ul>
+<p>Atmosphere can be interactive (mouse “friction” particles) as long as it stays <code>pointer-events: none</code> and respects <code>prefers-reduced-motion</code>.</p>
+<p><img alt="Search home" src="assets/agentic-wiki-home-search.png"></p>
+<p><em>Figure 3 — Search home: compact PARA filters, domains on demand, atmospheric background.</em></p>
+<hr>
+<h2>Getting started on your own stack</h2>
+<p>You do not need my exact compose file. Build toward this checklist:</p>
+<ol>
+<li><strong>Pick a vault root</strong> of Markdown files</li>
+<li><strong>Run Postgres with pgvector</strong> (localhost bind for the DB)</li>
+<li><strong>Write a small Go/Python/Node indexer</strong> that:</li>
+<li>walks <code>*.md</code></li>
+<li>skips trash/dotdirs</li>
+<li>upserts title, path, tags, body summary, embedding</li>
+<li>stores wikilink edges</li>
+<li><strong>Expose a thin REST API</strong>: health, stats, notes, reindex, media, chat stream</li>
+<li><strong>Ship a Next.js (or similar) reader</strong> with search + note page + chat panel</li>
+<li><strong>Bind UI/API for your use case</strong> (<code>127.0.0.1</code> for solo, <code>0.0.0.0</code> + tunnel Access for remote)</li>
+<li><strong>Full reindex once</strong>, then rely on filesystem watch for deltas</li>
+</ol>
+<p>Optional niceties: Control Hub TUI for start/stop/reindex; graph page; domain filters; async reindex with a progress strip.</p>
+<hr>
+<h2>What I deliberately left out</h2>
+<ul>
+<li>Exact repository paths, agent profiles, and private vault taxonomy</li>
+<li>Credentials, tunnel hostnames, LAN IPs, model download scripts</li>
+<li>Step-by-step “clone this compose and paste these secrets”</li>
+<li>Internal automation that is specific to my homelab</li>
+</ul>
+<p>The goal is <strong>transferable architecture</strong>, not a fingerprint of my lab.</p>
+<hr>
+<h2>Closing</h2>
+<p>An agentic wiki is not “ChatGPT over folders.” It is a <strong>discipline</strong>: notes remain human-owned Markdown; the machine gets a disposable index and a careful chat surface. Start small — one vault, one embed model, one search page — then add chat and screenshots when the index feels trustworthy.</p>
+<p>If you build your own, keep the vault read-only until you are sure you want write-back. That single rule saves more pain than any fancy RAG trick.</p>
+<hr>
+<p><em>Article visuals captured from a local demo UI. Video of live vault + chat walkthrough recorded separately by the author.</em></p>
+    <p><a class="repo-link" href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/build-a-local-agentic-wiki.md" rel="noopener">Source Markdown on GitHub</a></p>
+  </main>
+  <footer><div class="shell">
+    <p>Public-safe idea article. Private vault details, credentials, and infrastructure specifics are excluded.</p>
+    <p>Maintained by <a href="https://github.com/Meezok-PJ" rel="noopener">Mohammed Al-Balushi</a>.</p>
+  </div></footer>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Idea-level guide to building a local agentic wiki over Markdown notes: search, screenshots, and grounded chat without a private lab dump.">
+  <meta name="description" content="Build a local agentic wiki over Markdown notes with embeddings, vector search, and RAG — so local LLMs and agents answer from your context without burning cloud tokens.">
   <title>Build a Local Agentic Wiki Over Your Notes</title>
   <style>
     :root { --bg:#08090d; --surface:#11131c; --border:#1f2433; --text:#f3f4f6; --muted:#9ca3af; --emerald:#10b981; --cyan:#06b6d4; }
@@ -51,20 +51,67 @@
     <a class="nav-back" href="../index.html">Back to documentation vault</a>
     <h1>Build a Local Agentic Wiki Over Your Notes</h1>
 <blockquote>
-<p>A practical idea piece: turn a personal knowledge vault into a searchable, chat-capable wiki — without giving away a private lab recipe.</p>
+<p>I built my own agents-and-notes wiki. Not another chat window — a local system where my Markdown vault stays the source of truth, and RAG + embeddings give a local LLM real topic context without burning cloud tokens on work I already wrote down.</p>
 </blockquote>
 <p><img alt="Agentic Wiki note reader" src="../notes/shared/assets/agentic-wiki-note-reader.png"></p>
 <p><em>Figure 1 — Note reader with vault metadata and a “Chat with this note” entry point.</em></p>
 <hr>
-<h2>Why bother?</h2>
-<p>Most people already have notes: Obsidian, Markdown folders, course writeups, lab journals. Search inside the editor is fine until you want:</p>
+<h2>The habit almost everyone has</h2>
+<p>Ask a cloud model a simple question. Paste a paragraph. Re-explain the same project for the third time this week. Pay for tokens to recover context you already stored in notes.</p>
+<p>That pattern is fine for one-off help. It gets expensive — and noisy — when you are an AI engineer or you run agents all day. People forget how capable a <strong>local LLM</strong> already is for average tasks: rewrite this section, summarize this note, answer from what I already documented, draft a checklist.</p>
+<p>The missing piece is not “a bigger frontier model.” It is <strong>your context</strong>, sitting next to a small model that can use it.</p>
+<p>That is why vector databases and RAG feel so powerful locally: the model does not need to memorize your career. It retrieves the slice of your vault that matches the question, then answers with citations. Privacy stays on your machine when you want it. Agents can still call the same retrieval layer when they need grounded knowledge about a topic you already wrote.</p>
+<hr>
+<h2>What I mean by an agentic wiki</h2>
+<p>Most people already have notes: Obsidian, Markdown folders, course writeups, lab journals. Editor search is fine until you want:</p>
 <ol>
 <li><strong>A browser UI</strong> you can open on the LAN or through a tunnel</li>
 <li><strong>Semantic search</strong> (“where did I write about DNS tunnels?”)</li>
 <li><strong>Grounded chat</strong> that answers from <em>your</em> notes, with citations</li>
 </ol>
-<p>That combination is what I call an <strong>agentic wiki</strong>: the vault stays the source of truth; a derived index powers search + RAG. You still write in your editor. The wiki is a read-only lens.</p>
-<p>This article is intentionally <strong>idea-level</strong>. Exact hostnames, ports, passwords, folder layouts, and proprietary automation are omitted on purpose. Steal the architecture, invent your own wiring.</p>
+<p>An <strong>agentic wiki</strong> is that combination. The vault stays human-owned Markdown. A derived index powers search and RAG. You keep writing in your editor. The wiki is a read-only lens — useful for you, and reusable by agents that should not invent facts you already captured.</p>
+<p>This article is <strong>idea-level</strong>. Exact hostnames, ports, passwords, folder layouts, and proprietary automation are omitted on purpose. Steal the architecture, invent your own wiring.</p>
+<hr>
+<h2>Why local LLMs + RAG beat “just ask the cloud”</h2>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>What happens</th>
+<th>Cost / risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cloud for every small task</td>
+<td>Re-paste context every session</td>
+<td>Tokens, leakage, shallow memory</td>
+</tr>
+<tr>
+<td>Local LLM with no retrieval</td>
+<td>Model guesses from general training</td>
+<td>Confident, wrong, or empty</td>
+</tr>
+<tr>
+<td>Local LLM + embeddings + vector store</td>
+<td>Retrieve your notes, then generate</td>
+<td>Free inference on your box, grounded answers</td>
+</tr>
+<tr>
+<td>Agentic tools + same RAG layer</td>
+<td>Agents query your topic memory</td>
+<td>Less hallucination on <em>your</em> domain</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Embeddings</strong> turn note chunks into vectors. A <strong>vector database</strong> finds neighbors for a question. <strong>RAG</strong> stuffs those neighbors into the prompt so a local instruct model can answer with your wording and your structure — not a random web average.</p>
+<p>That stack helps AI engineers in three practical ways:</p>
+<ol>
+<li><strong>Token discipline</strong> — use local models for routine work over your notes; reserve cloud budget for hard reasoning.</li>
+<li><strong>Privacy</strong> — keep sensitive writeups, lab journals, and client-safe notes offline while still chatting against them.</li>
+<li><strong>Continuity</strong> — agents and humans share one retrieval surface: “continue from what I already documented about this topic.”</li>
+</ol>
+<p>RAG does not make a 7B model into a frontier lab. It makes a small model <strong>knowledgeable about your corpus</strong> — which is often what you actually needed.</p>
 <hr>
 <h2>The shape of the system</h2>
 <pre><code class="language-text">  [ Markdown vault ] --read-only--&gt; [ Ingest + embed ]
@@ -104,41 +151,28 @@
 </tr>
 </tbody>
 </table>
-<p>Local models (via Ollama or similar) handle <strong>embeddings</strong> and optional <strong>chat</strong>. Cloud models are optional; the idea works fully offline.</p>
+<p>Local models (via Ollama or similar) handle <strong>embeddings</strong> and optional <strong>chat</strong>. Cloud models are optional; the idea works fully offline. Agents can call the same search/chat APIs instead of inventing a second memory system.</p>
 <hr>
 <h2>Design principles that keep you sane</h2>
 <ol>
 <li><strong>Vault is sacred</strong> — mount it read-only into the indexer/UI stack. Never let the chat agent write back unless you explicitly build a “save draft” flow later.</li>
 <li><strong>Derived index, not a second brain</strong> — if the DB dies, regenerate from Markdown. Obsidian (or your editor) remains canonical.</li>
 <li><strong>PARA + domains</strong> — filter by life buckets (projects / areas / resources / archive) <em>and</em> by topic folders (red team, network, cloud, …). Path-based mapping beats fragile tags alone.</li>
-<li><strong>Same-origin API</strong> — if you expose the UI through Cloudflare Tunnel or LAN, the browser should call <code>/api/...</code> on the same host. Hardcoding <code>127.0.0.1</code> breaks remote clients.</li>
+<li><strong>Same-origin API</strong> — if you expose the UI through a tunnel or LAN, the browser should call <code>/api/...</code> on the same host. Hardcoding <code>127.0.0.1</code> breaks remote clients.</li>
 <li><strong>Screenshots belong in the vault</strong> — Obsidian embeds (<code>![[Pasted image….png]]</code>) should resolve through a small media endpoint so the reader shows lab screenshots, not broken icons.</li>
 </ol>
 <p><img alt="Chat with this note panel" src="../notes/shared/assets/agentic-wiki-chat-panel.png"></p>
-<p><em>Figure 2 — Note-scoped chat (Vault RAG / Note+links / Note only) with a local model picker. I’ll also record a short video of vault browsing + chat on my side.</em></p>
+<p><em>Figure 2 — Note-scoped chat (Vault RAG / Note+links / Note only) with a local model picker.</em></p>
 <hr>
 <h2>Chat that stays honest</h2>
 <p>A useful default chat mode is <strong>Vault RAG</strong>:</p>
 <ul>
 <li>Always include the open note</li>
-<li>Pull a few semantic neighbors</li>
+<li>Pull a few semantic neighbors from the vector store</li>
 <li>Stream the answer with citation chips</li>
 </ul>
 <p>Also offer <strong>Note only</strong> and <strong>Note + outbound links</strong> for days when you want maximum trust or tighter context.</p>
-<p>Pick a solid local instruct model for chat and a dedicated embed model for vectors. Let users switch chat models in the UI; filter out OCR/vision/embed-only names from the picker.</p>
-<hr>
-<h2>UI tone (skip the AI clutter)</h2>
-<p>If you ship a dashboard:</p>
-<ul>
-<li>One clear brand mark, not stacked logos</li>
-<li>Collapse advanced filters (domains, field tags) behind toggles</li>
-<li>Status strip: note count, index job, model health — not a telemetry wall</li>
-<li>Prefer calm motion (subtle particle atmosphere, fade-ins) over purple glow kits</li>
-<li>Add basic framebusting headers if the UI will sit on a tunnel</li>
-</ul>
-<p>Atmosphere can be interactive (mouse “friction” particles) as long as it stays <code>pointer-events: none</code> and respects <code>prefers-reduced-motion</code>.</p>
-<p><img alt="Search home" src="../notes/shared/assets/agentic-wiki-home-search.png"></p>
-<p><em>Figure 3 — Search home: compact PARA filters, domains on demand, atmospheric background.</em></p>
+<p>Use a dedicated <strong>embed model</strong> for vectors and a separate <strong>instruct model</strong> for chat. Let users switch chat models in the UI; keep embed-only and vision/OCR names out of the chat picker. The same retrieval modes are what you expose to agents: narrow context when the task is local, wider vault RAG when the topic spans many notes.</p>
 <hr>
 <h2>Getting started on your own stack</h2>
 <p>You do not need my exact compose file. Build toward this checklist:</p>
@@ -151,11 +185,11 @@
 <li>upserts title, path, tags, body summary, embedding</li>
 <li>stores wikilink edges</li>
 <li><strong>Expose a thin REST API</strong>: health, stats, notes, reindex, media, chat stream</li>
-<li><strong>Ship a Next.js (or similar) reader</strong> with search + note page + chat panel</li>
-<li><strong>Bind UI/API for your use case</strong> (<code>127.0.0.1</code> for solo, <code>0.0.0.0</code> + tunnel Access for remote)</li>
+<li><strong>Ship a reader UI</strong> with search + note page + chat panel</li>
+<li><strong>Bind UI/API for your use case</strong> (solo localhost, or broader bind + access control for remote)</li>
 <li><strong>Full reindex once</strong>, then rely on filesystem watch for deltas</li>
 </ol>
-<p>Optional niceties: Control Hub TUI for start/stop/reindex; graph page; domain filters; async reindex with a progress strip.</p>
+<p>Optional niceties: a small control TUI for start/stop/reindex; a graph page; domain filters; async reindex with a progress strip; agent-facing search that returns citations the same way the UI does.</p>
 <hr>
 <h2>What I deliberately left out</h2>
 <ul>
@@ -163,14 +197,16 @@
 <li>Credentials, tunnel hostnames, LAN IPs, model download scripts</li>
 <li>Step-by-step “clone this compose and paste these secrets”</li>
 <li>Internal automation that is specific to my homelab</li>
+<li>Pixel-level UI styling and dashboard cosmetics</li>
 </ul>
 <p>The goal is <strong>transferable architecture</strong>, not a fingerprint of my lab.</p>
 <hr>
 <h2>Closing</h2>
-<p>An agentic wiki is not “ChatGPT over folders.” It is a <strong>discipline</strong>: notes remain human-owned Markdown; the machine gets a disposable index and a careful chat surface. Start small — one vault, one embed model, one search page — then add chat and screenshots when the index feels trustworthy.</p>
-<p>If you build your own, keep the vault read-only until you are sure you want write-back. That single rule saves more pain than any fancy RAG trick.</p>
+<p>I did not build “ChatGPT over folders.” I built a <strong>discipline</strong>: notes remain human-owned Markdown; the machine gets a disposable vector index and a careful chat surface that local models — and agents — can use without re-buying the same context every time.</p>
+<p>Start small: one vault, one embed model, one search page. Add chat when retrieval feels trustworthy. Keep the vault read-only until you are sure you want write-back. That single rule saves more pain than any fancy RAG trick.</p>
+<p>If you work with AI tools daily, try the experiment: send the next <em>simple</em> task to a local model that already has your notes in a vector store. The average person will still open a cloud chat. You will already be answering from <em>your</em> wiki.</p>
 <hr>
-<p><em>Article visuals captured from a local demo UI. Video of live vault + chat walkthrough recorded separately by the author.</em></p>
+<p><em>Article visuals captured from a local demo UI.</em></p>
     <p><a class="repo-link" href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/build-a-local-agentic-wiki.md" rel="noopener">Source Markdown on GitHub</a></p>
   </main>
   <footer><div class="shell">

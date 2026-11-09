@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Module 02: Linux Shells (Bash, Zsh, Fish), Shell Configuration (/etc/profile, ~/.bashrc), Starship prompt, tmux multiplexing, and modern CLI tools (eza, bat, ripgrep, fzf, zoxide).">
+  <title>Module 02: Shells, Prompts &amp; Modern CLI Toolkit | Linux Academy</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #11131c;
+      --surface-hover: #171b28;
+      --border: #1f2433;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --emerald: #10b981;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.75 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 24px 0; border-bottom: 1px solid var(--border); }
+    .brand-row { display: flex; justify-content: space-between; align-items: center; }
+    .brand { color: var(--muted); font-size: .88rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: .92rem; font-weight: 600; }
+    .nav-links a:hover { color: var(--emerald); }
+    
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--muted); margin: 24px 0 16px; }
+    .breadcrumbs a { color: var(--cyan); text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    
+    main { padding: 12px 0 80px; }
+    h1, h2, h3, h4 { line-height: 1.22; color: var(--text); letter-spacing: -.03em; }
+    h1 { font-size: clamp(2.2rem, 5.5vw, 3.4rem); margin: 0 0 16px; letter-spacing: -.04em; }
+    h2 { font-size: 1.8rem; margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.3rem; margin-top: 32px; color: #e2e8f0; }
+    
+    p, li { color: #d7dbe4; }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    
+    .safety-banner {
+      margin: 28px 0;
+      padding: 22px 24px;
+      background: linear-gradient(135deg, #1c1318 0%, #11131c 100%);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-left: 5px solid var(--rose);
+      border-radius: 10px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .safety-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .safety-title { font-weight: 800; font-size: 1.05rem; color: #fecdd3; margin-bottom: 4px; }
+    .safety-desc { color: #e2e8f0; font-size: 0.92rem; line-height: 1.6; }
+    
+    .callout {
+      margin: 28px 0;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--cyan);
+      background: var(--surface);
+      border-radius: 8px;
+    }
+    .callout.amber { border-left-color: var(--amber); }
+    .callout.emerald { border-left-color: var(--emerald); }
+    .callout-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; color: var(--text); }
+    
+    .motion-infographic {
+      margin: 36px 0;
+      padding: 28px 24px;
+      background: radial-gradient(circle at center, #111524 0%, #090b12 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .infographic-title {
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--emerald);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .infographic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .infographic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .infographic-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--cyan);
+      box-shadow: 0 10px 25px -8px rgba(6, 182, 212, 0.25);
+    }
+    .infographic-card:active { transform: scale(0.98); }
+    .infographic-card-title { font-weight: 700; font-size: 0.98rem; color: var(--text); margin-bottom: 8px; }
+    .infographic-card-desc { font-size: 0.88rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    
+    .figure-container {
+      margin: 32px 0;
+      background: #0d0f16;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow: hidden;
+    }
+    .figure-container img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .figure-caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: .88rem;
+      text-align: center;
+    }
+    
+    table { width: 100%; border-collapse: collapse; margin: 28px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); font-size: .95rem; }
+    th { background: var(--surface); color: var(--emerald); font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+    
+    code { color: #b8f6dc; background: #161a26; padding: .15em .4em; border-radius: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .9em; }
+    pre { overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: #0b0d13; }
+    pre code { padding: 0; background: transparent; font-size: .92em; }
+    
+    .module-nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    .btn-nav:hover {
+      border-color: var(--emerald);
+      color: var(--emerald);
+      transform: translateY(-2px);
+    }
+    .btn-nav.primary {
+      background: #062b22;
+      color: var(--emerald);
+      border-color: var(--emerald);
+    }
+    .btn-nav.primary:hover {
+      background: var(--emerald);
+      color: #062b22;
+    }
+    
+    footer { padding: 36px 0 54px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell brand-row">
+      <div class="brand">Linux Engineering &amp; Homelab Academy</div>
+      <div class="nav-links">
+        <a href="../">Academy Hub</a>
+        <a href="../../">Docs Home</a>
+        <a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="breadcrumbs">
+      <a href="../">Academy Hub</a> &rarr; <span>Module 02: Shells, Prompts &amp; Modern CLI Toolkit</span>
+    </div>
+
+    <h1>Module 02: Shells, Prompts &amp; Modern CLI Toolkit</h1>
+    <p style="font-size:1.1rem;color:#cbd5e1;">Mastering Linux command interpreters, configuring startup dotfiles, supercharging terminal productivity with Starship &amp; tmux, and replacing legacy UNIX utilities with modern Rust-powered tools.</p>
+
+    <!-- SAFETY WARNING CALLOUT -->
+    <div class="safety-banner">
+      <div class="safety-icon">⚠️</div>
+      <div>
+        <div class="safety-title">Shell Configuration Caution</div>
+        <div class="safety-desc">
+          When modifying system-wide shell scripts (<code>/etc/profile</code>) or user dotfiles (<code>~/.bashrc</code>), always keep an active SSH terminal open before logging out. Syntax errors in login scripts can prevent successful user session initialization.
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <h2>1. Understanding Linux Shells</h2>
+    <p>A shell is a command language interpreter that executes commands read from standard input or from a script file. The standard shells available across Linux distributions are:</p>
+
+    <ul>
+      <li><strong>Bash (Bourne-Again SHell)</strong>: The default shell on most Linux distributions (Ubuntu, Fedora, Debian). Highly compatible with POSIX standards.</li>
+      <li><strong>Zsh (Z Shell)</strong>: Powerful interactive shell featuring advanced tab-completion, globbing, and extensive theme ecosystems (Oh My Zsh). Default on macOS and Kali Linux.</li>
+      <li><strong>Fish (Friendly Interactive SHell)</strong>: User-friendly shell with out-of-the-box syntax highlighting, autosuggestions, and clean web configuration.</li>
+    </ul>
+
+    <hr>
+
+    <h2>2. Shell Initialization Files: Global vs. User Scope</h2>
+    <p>When you start a terminal session, Linux loads configuration scripts in a strictly defined hierarchy:</p>
+
+    <!-- MOTION INFOGRAPHIC: SHELL INITIALIZATION FLOW -->
+    <div class="motion-infographic">
+      <div class="infographic-title">Shell Startup Configuration Hierarchy</div>
+      <div class="infographic-grid">
+        <div class="infographic-card">
+          <div class="infographic-card-title">1. /etc/profile (Global Login)</div>
+          <p class="infographic-card-desc">System-wide environment variables, PATH defaults, and umask settings applied to ALL users upon login.</p>
+        </div>
+        <div class="infographic-card">
+          <div class="infographic-card-title">2. /etc/bashrc (Global Non-Login)</div>
+          <p class="infographic-card-desc">System-wide aliases and function definitions executed for every new interactive subshell.</p>
+        </div>
+        <div class="infographic-card">
+          <div class="infographic-card-title">3. ~/.bash_profile (User Login)</div>
+          <p class="infographic-card-desc">User-specific environment settings executed once upon initial remote SSH or console login.</p>
+        </div>
+        <div class="infographic-card">
+          <div class="infographic-card-title">4. ~/.bashrc (User Interactive)</div>
+          <p class="infographic-card-desc">User-specific aliases, custom functions, prompt variables (PS1), and PATH customizations.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/linux-shell-profile-config.png" alt="Inspecting /etc/profile in Linux">
+      <div class="figure-caption">Figure 1: Inspecting system-wide environment variable exports in <code>/etc/profile</code>.</div>
+    </div>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/linux-user-bashrc-config.png" alt="Configuring User ~/.bashrc File">
+      <div class="figure-caption">Figure 2: Customizing user-level aliases, PATH expansions, and Starship prompt in <code>~/.bashrc</code>.</div>
+    </div>
+
+    <hr>
+
+    <h2>3. The Modern Rust CLI Replacement Toolkit</h2>
+    <p>Modern Linux sysadmins frequently replace 40-year-old UNIX binaries with blazing-fast, syntax-highlighted, memory-safe alternatives:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Legacy Binary</th>
+          <th>Modern Tool</th>
+          <th>Superpower / Key Advantage</th>
+          <th>Install Command (Ubuntu/Debian)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>ls</code></td>
+          <td><strong>eza</strong> (or <code>lsd</code>)</td>
+          <td>Color-coded file types, Git status badges, tree view.</td>
+          <td><code>sudo apt install eza</code></td>
+        </tr>
+        <tr>
+          <td><code>cat</code></td>
+          <td><strong>bat</strong></td>
+          <td>Syntax highlighting, line numbers, Git modifications.</td>
+          <td><code>sudo apt install bat</code></td>
+        </tr>
+        <tr>
+          <td><code>grep</code></td>
+          <td><strong>ripgrep</strong> (<code>rg</code>)</td>
+          <td>10x faster recursive search, respects <code>.gitignore</code>.</td>
+          <td><code>sudo apt install ripgrep</code></td>
+        </tr>
+        <tr>
+          <td><code>find</code></td>
+          <td><strong>fd-find</strong> (<code>fd</code>)</td>
+          <td>Intuitive syntax, colorized outputs, smart case search.</td>
+          <td><code>sudo apt install fd-find</code></td>
+        </tr>
+        <tr>
+          <td><code>cd</code></td>
+          <td><strong>zoxide</strong> (<code>z</code>)</td>
+          <td>Fuzzy directory jumping based on usage frecency.</td>
+          <td><code>curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh</code></td>
+        </tr>
+        <tr>
+          <td><code>Ctrl + R</code></td>
+          <td><strong>fzf</strong></td>
+          <td>Interactive fuzzy search for files, processes, and history.</td>
+          <td><code>sudo apt install fzf</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr>
+
+    <h2>4. Terminal Multiplexing with `tmux`</h2>
+    <p><code>tmux</code> (Terminal Multiplexer) allows you to run multiple persistent terminal sessions inside a single SSH connection. If your network drops, your background compiling scripts continue running uninterrupted.</p>
+
+    <pre><code># Start a new named tmux session
+tmux new -s homelab_session
+
+# Split active pane horizontally:  Ctrl + b then "
+# Split active pane vertically:    Ctrl + b then %
+# Switch between active panes:     Ctrl + b then Arrow Keys
+# Detach from session safely:      Ctrl + b then d
+
+# List active running tmux sessions
+tmux ls
+
+# Reattach to existing session
+tmux attach -t homelab_session</code></pre>
+
+    <hr>
+
+    <h2>5. Recommended Custom `~/.bashrc` Configuration</h2>
+    <p>Add these productivity aliases to your personal <code>~/.bashrc</code>:</p>
+
+    <pre><code># Modern CLI Aliases
+alias ls='eza --icons --group-directories-first'
+alias ll='eza -la --icons --git --group-directories-first'
+alias tree='eza --tree --icons'
+alias cat='batcat --paging=never'
+alias grep='grep --color=auto'
+alias df='df -h'
+alias free='free -m'
+alias ports='sudo ss -tulpn'
+
+# Fast Reload
+alias reload='source ~/.bashrc && echo "Shell config reloaded!"'</code></pre>
+
+    <div class="callout emerald">
+      <div class="callout-title">Module 02 Lab Verification Milestone</div>
+      <p>Your shell is now customized with fast modern tools, persistent tmux sessions, and structured dotfiles. Proceed to Module 03 to master the Linux Filesystem Hierarchy Standard and text stream pipelines!</p>
+    </div>
+
+    <!-- MODULE NAVIGATION -->
+    <div class="module-nav-bar">
+      <a href="../01-getting-started-and-vms/" class="btn-nav">&larr; Previous: Module 01 (VM Setup)</a>
+      <a href="../03-filesystem-and-text-pipelines/" class="btn-nav primary">Next: Module 03 (FHS &amp; Text Pipelines) &rarr;</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>&copy; 2026 Mohammed Al-Balushi &bull; <a href="https://notes.meezok-lab.com" style="color:var(--cyan);text-decoration:none;">notes.meezok-lab.com</a></p>
+      <p><a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener" style="color:var(--emerald);text-decoration:none;font-weight:700;">Meezok-PJ/share Repository</a></p>
+    </div>
+  </footer>
+</body>
+</html>

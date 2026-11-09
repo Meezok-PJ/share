@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Module 01: Getting Started with Linux Virtual Machines, Hypervisor setups (VirtualBox, VMware, Proxmox), Ubuntu Server & Fedora installation walkthroughs, network modes, and baseline first-boot security.">
+  <title>Module 01: Getting Started &amp; Virtual Machine Lab Setup | Linux Academy</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #11131c;
+      --surface-hover: #171b28;
+      --border: #1f2433;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --emerald: #10b981;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.75 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 24px 0; border-bottom: 1px solid var(--border); }
+    .brand-row { display: flex; justify-content: space-between; align-items: center; }
+    .brand { color: var(--muted); font-size: .88rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: .92rem; font-weight: 600; }
+    .nav-links a:hover { color: var(--emerald); }
+    
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--muted); margin: 24px 0 16px; }
+    .breadcrumbs a { color: var(--cyan); text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    
+    main { padding: 12px 0 80px; }
+    h1, h2, h3, h4 { line-height: 1.22; color: var(--text); letter-spacing: -.03em; }
+    h1 { font-size: clamp(2.2rem, 5.5vw, 3.4rem); margin: 0 0 16px; letter-spacing: -.04em; }
+    h2 { font-size: 1.8rem; margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.3rem; margin-top: 32px; color: #e2e8f0; }
+    
+    p, li { color: #d7dbe4; }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    
+    .safety-banner {
+      margin: 28px 0;
+      padding: 22px 24px;
+      background: linear-gradient(135deg, #1c1318 0%, #11131c 100%);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-left: 5px solid var(--rose);
+      border-radius: 10px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .safety-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .safety-title { font-weight: 800; font-size: 1.05rem; color: #fecdd3; margin-bottom: 4px; }
+    .safety-desc { color: #e2e8f0; font-size: 0.92rem; line-height: 1.6; }
+    
+    .callout {
+      margin: 28px 0;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--cyan);
+      background: var(--surface);
+      border-radius: 8px;
+    }
+    .callout.amber { border-left-color: var(--amber); }
+    .callout.emerald { border-left-color: var(--emerald); }
+    .callout-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; color: var(--text); }
+    
+    /* Motion Infographic Card Grid */
+    .motion-infographic {
+      margin: 36px 0;
+      padding: 28px 24px;
+      background: radial-gradient(circle at center, #111524 0%, #090b12 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .infographic-title {
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--emerald);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .infographic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .infographic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .infographic-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--cyan);
+      box-shadow: 0 10px 25px -8px rgba(6, 182, 212, 0.25);
+    }
+    .infographic-card:active { transform: scale(0.98); }
+    .infographic-card-title { font-weight: 700; font-size: 0.98rem; color: var(--text); margin-bottom: 8px; }
+    .infographic-card-desc { font-size: 0.88rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    
+    .figure-container {
+      margin: 32px 0;
+      background: #0d0f16;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow: hidden;
+    }
+    .figure-container img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .figure-caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: .88rem;
+      text-align: center;
+    }
+    
+    table { width: 100%; border-collapse: collapse; margin: 28px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); font-size: .95rem; }
+    th { background: var(--surface); color: var(--emerald); font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+    
+    code { color: #b8f6dc; background: #161a26; padding: .15em .4em; border-radius: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .9em; }
+    pre { overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: #0b0d13; }
+    pre code { padding: 0; background: transparent; font-size: .92em; }
+    
+    .module-nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    .btn-nav:hover {
+      border-color: var(--emerald);
+      color: var(--emerald);
+      transform: translateY(-2px);
+    }
+    .btn-nav.primary {
+      background: #062b22;
+      color: var(--emerald);
+      border-color: var(--emerald);
+    }
+    .btn-nav.primary:hover {
+      background: var(--emerald);
+      color: #062b22;
+    }
+    
+    footer { padding: 36px 0 54px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell brand-row">
+      <div class="brand">Linux Engineering &amp; Homelab Academy</div>
+      <div class="nav-links">
+        <a href="../">Academy Hub</a>
+        <a href="../../">Docs Home</a>
+        <a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="breadcrumbs">
+      <a href="../">Academy Hub</a> &rarr; <span>Module 01: Getting Started &amp; VM Setup</span>
+    </div>
+
+    <h1>Module 01: Getting Started &amp; Virtual Machine Lab Setup</h1>
+    <p style="font-size:1.1rem;color:#cbd5e1;">A zero-to-hero guide on setting up a virtualized Linux lab environment using VMware, VirtualBox, or Proxmox, installing Ubuntu Server and Fedora, configuring network modes, and securing first-boot access.</p>
+
+    <!-- SAFETY WARNING CALLOUT -->
+    <div class="safety-banner">
+      <div class="safety-icon">⚠️</div>
+      <div>
+        <div class="safety-title">Educational Sandbox Notice</div>
+        <div class="safety-desc">
+          Always perform your Linux administration, package installations, and disk modifications inside an <strong>isolated Virtual Machine (VM)</strong>. Never execute destructive formatting or root system modifications directly on your primary host machine without virtualization guardrails.
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <h2>1. Choosing Your Hypervisor</h2>
+    <p>A Type-2 hypervisor runs as an application on your existing Windows/macOS/Linux operating system, allowing you to run multiple isolated guest Linux environments simultaneously:</p>
+
+    <!-- MOTION INFOGRAPHIC: HYPERVISOR ARCHITECTURE -->
+    <div class="motion-infographic">
+      <div class="infographic-title">Virtualization Hypervisor Architecture</div>
+      <div class="infographic-grid">
+        <div class="infographic-card">
+          <div class="infographic-card-title">1. VMware Workstation / Player</div>
+          <p class="infographic-card-desc">Industry-standard desktop hypervisor. High-performance 3D graphics, seamless host-guest networking, and stable NAT bridging.</p>
+        </div>
+        <div class="infographic-card">
+          <div class="infographic-card-title">2. Oracle VirtualBox</div>
+          <p class="infographic-card-desc">Free and open-source cross-platform hypervisor. Excellent for lightweight CLI servers, snapshot branches, and portable OVA appliances.</p>
+        </div>
+        <div class="infographic-card">
+          <div class="infographic-card-title">3. Proxmox VE (Type-1)</div>
+          <p class="infographic-card-desc">Bare-metal enterprise hypervisor for dedicated homelab servers. Web UI, LXC containers, KVM virtual machines, and ZFS storage pools.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <h2>2. VM Hardware Specifications for Ubuntu Server</h2>
+    <p>When provisioning your first headless Ubuntu Server 24.04/25.04 LTS virtual machine, configure these baseline hardware parameters:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Resource</th>
+          <th>Minimum Spec</th>
+          <th>Recommended Homelab Spec</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>vCPU Cores</strong></td>
+          <td>1 Core</td>
+          <td>2 - 4 Cores</td>
+          <td>Supports parallel container builds and background compilation.</td>
+        </tr>
+        <tr>
+          <td><strong>RAM</strong></td>
+          <td>2 GB</td>
+          <td>4 GB - 8 GB</td>
+          <td>Essential if running Docker Compose stacks (Code-Server, Pi-hole, databases).</td>
+        </tr>
+        <tr>
+          <td><strong>Virtual Disk</strong></td>
+          <td>25 GB (Dynamic)</td>
+          <td>40 GB - 60 GB</td>
+          <td>Dynamically allocated disk consumes storage only as files are written.</td>
+        </tr>
+        <tr>
+          <td><strong>Network Mode</strong></td>
+          <td>NAT</td>
+          <td>Bridged Adapter</td>
+          <td><strong>Bridged</strong> assigns a real LAN IP on your home router for easy SSH from any device.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/casaos/aed2ae03bbf023b966bb6930c95ce0a1.png" alt="Configuring Virtual Machine Hardware in VMware">
+      <div class="figure-caption">Figure 1: Selecting the Ubuntu Server installer ISO file in the hypervisor.</div>
+    </div>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/casaos/4928dec45f4201015035fd80cd0f9fb0.png" alt="Selecting ISO Image for Ubuntu Server">
+      <div class="figure-caption">Figure 2: Configuring Virtual Machine hardware parameters (Memory, Processors, and Hard Disk capacity).</div>
+    </div>
+
+    <hr>
+
+    <h2>3. Step-by-Step Ubuntu Server Installation Walkthrough</h2>
+
+    <h3>Step 1: Installer Language and Base Profile</h3>
+    <p>Boot the VM and select <strong>Try or Install Ubuntu Server</strong>. Choose your keyboard layout and select the default base installation profile (do not install minimized if you are a beginner, as standard includes curl, git, and diagnostic tools).</p>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/casaos/6440fe556d3b3bf1b76ed8d523854472.png" alt="Ubuntu Server Installer Initial Boot Screen">
+      <div class="figure-caption">Figure 3: Ubuntu Server installer language selection and network DHCP detection.</div>
+    </div>
+
+    <h3>Step 2: Network Configuration (DHCP vs Static)</h3>
+    <p>By default, the installer queries your hypervisor's DHCP server for an IPv4 address. Note down the IP address assigned (e.g. <code>192.168.100.50</code> or <code>192.168.3.67</code>).</p>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/casaos/c2b85bef05a03589d14ebece95505912.png" alt="Configuring Network Interface in Ubuntu Installer">
+      <div class="figure-caption">Figure 4: Verifying DHCP network interface configuration and proxy settings.</div>
+    </div>
+
+    <h3>Step 3: Guided Partitioning and LVM Setup</h3>
+    <p>Select <strong>Use an entire disk</strong> and check <strong>Set up this disk as an LVM group</strong>. This creates an ext4 root partition managed under LVM, allowing you to expand volume sizes in the future without reformatting.</p>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/casaos/88c2eaf6e82cfb8886cb351598c1e023.png" alt="Guided Partitioning and Storage Layout">
+      <div class="figure-caption">Figure 5: Confirming guided disk partitioning and LVM filesystem allocation.</div>
+    </div>
+
+    <h3>Step 4: User Profile &amp; OpenSSH Server Installation</h3>
+    <p>Enter your server hostname (e.g. <code>homelab-server</code>), your administrative username (e.g. <code>meezok</code>), and a strong passphrase. On the next screen, <strong>check [X] Install OpenSSH Server</strong> — this is essential for connecting remotely over terminal.</p>
+
+    <div class="figure-container">
+      <img src="../../../assets/linux/casaos/6be7a761b8500bfd493bb1629d0b315c.png" alt="Setting Hostname and Profile Credentials">
+      <div class="figure-caption">Figure 6: Profile setup and OpenSSH daemon activation.</div>
+    </div>
+
+    <hr>
+
+    <h2>4. First-Boot Checklist &amp; Baseline Security</h2>
+    <p>Once installation finishes, reboot the VM and log in via your host terminal using SSH:</p>
+
+    <pre><code># Connect to your newly created VM from your host terminal
+ssh meezok@192.168.3.67
+
+# 1. Update package repository indexes and upgrade existing packages
+sudo apt update && sudo apt full-upgrade -y
+
+# 2. Install essential system diagnostic and admin packages
+sudo apt install -y curl wget git htop tmux ufw net-tools build-essential
+
+# 3. Enable the Uncomplicated Firewall (UFW) and allow SSH
+sudo ufw allow 22/tcp
+sudo ufw enable
+sudo ufw status verbose</code></pre>
+
+    <div class="callout emerald">
+      <div class="callout-title">Module 01 Lab Verification Milestone</div>
+      <p>You now have a fully functional, headless Ubuntu Server Linux VM running with OpenSSH server and firewall enabled. You are ready to move to Module 02 to master shells, prompts, and the modern CLI toolkit!</p>
+    </div>
+
+    <!-- MODULE NAVIGATION -->
+    <div class="module-nav-bar">
+      <a href="../" class="btn-nav">&larr; Academy Hub</a>
+      <a href="../02-shells-and-modern-tools/" class="btn-nav primary">Next: Module 02 (Shells &amp; Tools) &rarr;</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>&copy; 2026 Mohammed Al-Balushi &bull; <a href="https://notes.meezok-lab.com" style="color:var(--cyan);text-decoration:none;">notes.meezok-lab.com</a></p>
+      <p><a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener" style="color:var(--emerald);text-decoration:none;font-weight:700;">Meezok-PJ/share Repository</a></p>
+    </div>
+  </footer>
+</body>
+</html>

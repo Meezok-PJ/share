@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A friendly behind-the-scenes walkthrough of Mohammed's personal Fedora workstation, developer tooling (Neovim, Herdr), KVM virtualization, and self-hosted homelab services.">
+  <title>Welcome to My Homelab: A Walkthrough of My Fedora Workstation & Virtualized Lab</title>
+  <style>
+    :root { 
+      --bg:#08090d; 
+      --surface:#11131c; 
+      --border:#1f2433; 
+      --text:#f3f4f6; 
+      --muted:#9ca3af; 
+      --emerald:#10b981; 
+      --cyan:#06b6d4; 
+      --rose:#f43f5e;
+      --amber:#f59e0b;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:17px/1.7 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .shell { width:min(960px, calc(100% - 32px)); margin:0 auto; }
+    header { padding:28px 0; border-bottom:1px solid var(--border); }
+    .brand { color:var(--muted); font-size:.88rem; letter-spacing:.08em; text-transform:uppercase; font-weight:600; }
+    .author { display:flex; align-items:center; gap:14px; margin-top:18px; color:var(--muted); }
+    .author img { width:48px; height:48px; border-radius:50%; border:2px solid var(--emerald); }
+    .author a { color:var(--text); text-decoration:none; font-weight:700; }
+    main { padding:48px 0 72px; }
+    h1,h2,h3,h4 { line-height:1.22; color:var(--text); font-weight:700; }
+    h1 { font-size:clamp(2.2rem, 5vw, 3.6rem); margin:0 0 20px; letter-spacing:-.04em; }
+    h2 { font-size:1.6rem; margin-top:54px; padding-top:16px; border-top:1px solid var(--border); color:var(--emerald); }
+    h3 { font-size:1.2rem; margin-top:32px; color:var(--cyan); }
+    p,li { color:#d7dbe4; font-size:1.04rem; }
+    ul, ol { padding-left:24px; }
+    li { margin-bottom:10px; }
+    a { color:var(--cyan); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    blockquote { margin:28px 0; padding:18px 22px; border-left:4px solid var(--emerald); background:var(--surface); color:#cbd5e1; border-radius:0 10px 10px 0; }
+    .callout-story { border-left-color:var(--amber); background:rgba(245, 158, 11, 0.08); }
+    .figure-container { margin:36px 0; text-align:center; }
+    img { display:block; width:100%; height:auto; border:1px solid var(--border); border-radius:12px; margin:16px 0; background:var(--surface); box-shadow:0 8px 30px rgba(0,0,0,0.5); }
+    figcaption { color:var(--muted); font-size:0.9rem; font-style:italic; margin-top:8px; }
+    code { color:#a7f3d0; background:var(--surface); padding:.2em .45em; border-radius:6px; font-size:0.9em; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; }
+    pre { overflow-x:auto; padding:20px; border:1px solid var(--border); border-radius:12px; background:#0c0e14; margin:24px 0; font-size:0.92rem; line-height:1.6; }
+    pre code { padding:0; background:transparent; color:#e2e8f0; }
+    .badge { display:inline-block; padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-right:8px; }
+    .badge-blue { background:rgba(6, 182, 212, 0.15); color:var(--cyan); border:1px solid rgba(6, 182, 212, 0.3); }
+    .badge-green { background:rgba(16, 185, 129, 0.15); color:var(--emerald); border:1px solid rgba(16, 185, 129, 0.3); }
+    footer { padding:36px 0 54px; border-top:1px solid var(--border); color:var(--muted); font-size:.92rem; }
+    @media (max-width:640px) { body { font-size:16px; } main { padding-top:28px; } }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { darkColorScheme: true, background: '#08090d', primaryColor: '#11131c', primaryBorderColor: '#10b981', lineEdgeColor: '#06b6d4' } });
+  </script>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <div class="brand">Engineering Walkthrough &bull; Homelab &amp; Developer Workstation</div>
+      <div class="author">
+        <img src="https://github.com/Meezok-PJ.png" alt="Mohammed Al-Balushi Profile">
+        <div>
+          Written by <a href="https://github.com/Meezok-PJ" target="_blank" rel="noopener">Mohammed Al-Balushi</a><br>
+          <span style="font-size:0.85rem;">AI Security Engineer &amp; Cyber Operations Specialist</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div style="margin-bottom:24px;">
+      <a href="../" style="color:var(--emerald);font-weight:700;text-decoration:none;font-size:0.92rem;">&larr; Back to Articles Hub</a> &bull; 
+      <a href="../../" style="color:var(--muted);text-decoration:none;font-size:0.92rem;">Home</a>
+    </div>
+
+    <h1>Welcome to My Homelab: A Walkthrough of My Fedora Workstation & Virtualized Lab</h1>
+    
+    <blockquote>
+      Welcome to my personal engineering space! Over the past few months, I set out to build a clean, unified setup that combines a high-performance daily workstation with a self-contained, isolated homelab. In this walkthrough, I want to take you behind the scenes of how everything is put together, the tools I use every day, and the real-world roadblocks I ran into along the way.
+    </blockquote>
+
+    <div style="margin:20px 0;">
+      <span class="badge badge-green">Fedora 44 Workstation</span>
+      <span class="badge badge-blue">KVM Virtualization</span>
+      <span class="badge badge-green">AlmaLinux 9</span>
+      <span class="badge badge-blue">Private Wildcard SSL</span>
+    </div>
+
+    <hr style="border:0;border-top:1px solid var(--border);margin:36px 0;">
+
+    <h2>1. Why I Built This: The Single-Machine Philosophy</h2>
+    <p>
+      Like many developers and cybersecurity enthusiasts, I used to juggle multiple physical devices: an everyday desktop for web browsing and office tasks, a separate mini-PC humming away in the corner running homelab containers, and spare laptops for experimentation. It worked, but it was noisy, consumed extra power, and required constant context switching between keyboards and monitors.
+    </p>
+
+    <p>
+      I wanted a single, unified machine that could handle three distinct roles without compromise:
+    </p>
+    <ul>
+      <li><strong>My Daily Driver</strong>: A responsive Linux desktop with hardware graphics acceleration for smooth 144Hz desktop performance.</li>
+      <li><strong>My Coding &amp; AI Lab</strong>: A lightning-fast terminal environment where I can write code in Neovim and orchestrate parallel AI coding agents.</li>
+      <li><strong>An Isolated Homelab</strong>: A rock-solid virtualization layer hosting self-hosted services, personal dashboards, and test environments that run independently without cluttering my host system.</li>
+    </ul>
+
+    <p>
+      Here is a high-level look at how all these pieces fit together:
+    </p>
+
+    <pre class="mermaid">
+flowchart TD
+    subgraph LAN["Home Network (Sanitized 10.10.10.x)"]
+        User["My Laptop / Phone / Browser"]
+    end
+
+    subgraph Host["Fedora Workstation (The Foundation)"]
+        NPM["Nginx Proxy Manager<br/>(Wildcard SSL Gateway)"]
+        PiHole["Pi-hole DNS Sinkhole<br/>(Private Domain Routing)"]
+        DevTools["My Daily Tools<br/>(Neovim + Herdr AI Multiplexer)"]
+        Bridge["KVM Virtual Bridge"]
+    end
+
+    subgraph VM["AlmaLinux 9 Virtual Machine (The Homelab)"]
+        Glance["Glance Personal Dashboard"]
+        Linkwarden["Linkwarden Web Archival"]
+        Cockpit["Cockpit Server Console"]
+    end
+
+    User -->|"Browse *.meezok.lab"| PiHole
+    PiHole -.->|"Resolves to Host IP"| User
+    User -->|"Secure HTTPS Request"| NPM
+    NPM -->|"Smooth Internal Route"| Bridge
+    Bridge --> Glance
+    Bridge --> Linkwarden
+    Bridge --> Cockpit
+    </pre>
+
+    <h2>2. The Foundation: Fedora Workstation as My Daily Driver</h2>
+    <p>
+      For the underlying operating system, I chose <strong>Fedora Workstation 44</strong>. Fedora strikes the perfect balance for my workflow: it gives me cutting-edge Linux kernels and modern developer software while preserving rock-solid stability.
+    </p>
+
+    <pre><code>             .',;::::;,'.                 meezok@fedora
+         .';:cccccccccccc:;,.             -------------
+      .;cccccccccccccccccccccc;.          OS: Fedora Linux 44 (Workstation Edition) x86_64
+    .:cccccccccccccccccccccccccc:.        Host: Z390 AORUS PRO
+  .;ccccccccccccc;.:dddl:.;ccccccc;.      Kernel: Linux 7.1.12-200.fc44.x86_64
+ .:ccccccccccccc;OWMKOOXMWd;ccccccc:.     Uptime: 2 days, 19 hours
+.:ccccccccccccc;KMMc;cc;xMMc;ccccccc:.    Shell: zsh / bash 5.3.9
+ccccc;XMO';cccc;MMM.;cccccccccccccccc'    CPU: Intel Core i9-9900K (16 threads) @ 5.00 GHz
+ccccc;MMo;ccccc;MMW.;ccccccccccccccc;     GPU: NVIDIA GeForce RTX 2080 Rev. A
+cccccc;dNMWXXXWM0:;cccccccccccccc:,       Memory: 48 GB DDR4 RAM
+ccccccccccccccccccccccccccccc:'.          Disk: Btrfs root + Dedicated SSD Mounts</code></pre>
+
+    <p>
+      A few key decisions I made during post-installation setup:
+    </p>
+    <ul>
+      <li><strong>Speeding up package management</strong>: Fedora's DNF package manager can feel a bit conservative out of the box. By configuring parallel downloads and fastest mirror detection in <code>/etc/dnf/dnf.conf</code>, package updates finish in a flash.</li>
+      <li><strong>NVIDIA acceleration</strong>: I enabled the RPM Fusion repositories and installed the proprietary NVIDIA drivers (<code>akmod-nvidia</code>) so that Wayland runs buttery-smooth and local AI models have access to full CUDA acceleration.</li>
+      <li><strong>Smart storage with Btrfs</strong>: The root filesystem uses Btrfs with transparent compression. This gives me instant snapshots before testing new software, while high-write container volumes live on a dedicated solid-state mount (<code>/mnt/ssd/docker-data/</code>) to keep my primary disk clean.</li>
+    </ul>
+
+    <div class="figure-container">
+      <img src="images/Screenshot%20From%202026-08-26%2011-36-20.png" alt="Fedora DNF Package Optimization">
+      <figcaption>Figure 1: Fedora DNF parallel download streams and fastest mirror benchmarking.</figcaption>
+    </div>
+
+    <div class="figure-container">
+      <img src="images/Screenshot%20From%202026-08-27%2011-56-12.png" alt="NVIDIA Driver and RPM Fusion Verification">
+      <figcaption>Figure 2: Verifying RPM Fusion repositories and proprietary NVIDIA kernel modules.</figcaption>
+    </div>
+
+    <h2>3. My Daily Developer Cockpit: Neovim &amp; Herdr</h2>
+    <p>
+      When I sit down to work, I spend almost all my time inside the terminal. I want everything to feel snappy, minimal, and keyboard-driven.
+    </p>
+
+    <h3>Neovim with Kickstart.nvim</h3>
+    <p>
+      Instead of using heavy, pre-packaged Neovim distributions that hide how things work under multiple layers of abstraction, I started with <code>kickstart.nvim</code>. It gives me a clean, modular setup tailored to my exact needs:
+    </p>
+    <ul>
+      <li><strong>Language Server Protocol (LSP)</strong> for Go, Python, Bash, and YAML with real-time diagnostics and autocomplete.</li>
+      <li><strong>Treesitter</strong> for instant, context-aware syntax parsing and code highlighting.</li>
+      <li><strong>Telescope</strong> for fuzzy-finding through files, notes, and git history in milliseconds.</li>
+    </ul>
+
+    <h3>Herdr: Multiplexing My Autonomous AI Coding Agents</h3>
+    <p>
+      One of the most exciting additions to my daily toolkit is <strong>Herdr</strong> (<code>herdr</code>) — a modern terminal multiplexer built in Rust specifically designed for working with autonomous AI coding agents.
+    </p>
+
+    <p>
+      What makes Herdr indispensable for my workflow:
+    </p>
+    <ul>
+      <li><strong>Detached, persistent sessions</strong>: I can kick off an intensive coding task or deep research subagent, disconnect or restart my graphical desktop, and attach right back to the session exactly where it left off.</li>
+      <li><strong>Agent state telemetry</strong>: Herdr actively monitors what the agent is doing in the background (whether it is executing a tool, thinking, or waiting for my approval) so I never have to guess what my background agents are up to.</li>
+    </ul>
+
+    <p>
+      Alongside Herdr, I use <strong>Superfile</strong> (<code>spf</code>) for dual-pane terminal file management and <strong>Zsh with Powerlevel10k</strong> for an informative, lightning-fast prompt.
+    </p>
+
+    <h2>4. Virtualization Made Clean: Running AlmaLinux on KVM</h2>
+    <p>
+      Rather than dumping all my homelab containers directly onto my Fedora workstation and cluttering my host libraries, I spin up virtual machines using <strong>KVM/QEMU and Virt-Manager</strong>.
+    </p>
+
+    <div class="figure-container">
+      <img src="images/Screenshot%20From%202026-08-27%2014-05-40.png" alt="Virt-Manager Virtual Machine Console">
+      <figcaption>Figure 3: Virt-Manager console managing isolated KVM guest virtual machines.</figcaption>
+    </div>
+
+    <p>
+      My primary homelab server is an <strong>AlmaLinux 9 Minimal VM</strong> (<code>vm1-nv</code>):
+    </p>
+    <ul>
+      <li>It gets dedicated CPU cores and 4 GB of RAM with dynamic memory ballooning.</li>
+      <li>It runs SELinux in full Enforcing mode to maintain an enterprise-grade security posture.</li>
+      <li>It runs Podman and Docker to host all my homelab web applications.</li>
+    </ul>
+
+    <p>
+      By keeping these services inside a virtual machine, I can snapshot the entire VM, test updates, or redeploy from scratch without ever risking my daily desktop.
+    </p>
+
+    <h2>5. Connecting the Dots: Private Domains &amp; Wildcard SSL</h2>
+    <p>
+      One of my biggest pet peeves in a homelab is having to memorize raw IP addresses and odd port numbers like <code>192.168.x.x:8080</code> or <code>192.168.x.x:3000</code>. I wanted everything to feel like a production internet application with clean domains and green SSL lock icons.
+    </p>
+
+    <p>Here is how I connected the pieces together:</p>
+
+    <h3>Split-Horizon DNS with Pi-hole</h3>
+    <p>
+      I run Pi-hole on the host. Beyond blocking advertisements and telemetry trackers network-wide across 78,000+ domains, Pi-hole acts as my private DNS authority:
+    </p>
+    <ul>
+      <li>Whenever any device on my network asks for <code>*.meezok.lab</code> (like <code>links.meezok.lab</code> or <code>cockpit.meezok.lab</code>), Pi-hole instantly points it to my host reverse proxy.</li>
+    </ul>
+
+    <div class="figure-container">
+      <img src="images/pihole-admin-full.png" alt="Pi-hole DNS Sinkhole Telemetry Dashboard">
+      <figcaption>Figure 4: Pi-hole DNS sinkhole dashboard showcasing total queries and ad-blocking metrics.</figcaption>
+    </div>
+
+    <h3>Nginx Proxy Manager &amp; Wildcard SSL</h3>
+    <p>
+      On the host, Nginx Proxy Manager (NPM) handles all incoming web traffic. With a single wildcard certificate (<code>*.meezok.lab</code>), NPM automatically terminates SSL and quietly forwards requests to the correct service inside the VM.
+    </p>
+
+    <div class="figure-container">
+      <img src="images/npm-proxy-hosts-full.png" alt="Nginx Proxy Manager Admin Portal">
+      <figcaption>Figure 5: Nginx Proxy Manager portal managing wildcard SSL proxy hosts.</figcaption>
+    </div>
+
+    <h2>6. A Tour of the Homelab Services</h2>
+    <p>Here are the services I run daily inside the lab:</p>
+
+    <h3>Glance: My Personal Command Center (<code>https://links.meezok.lab</code>)</h3>
+    <p>
+      Glance is the heart of my daily workflow. It opens up in the morning as my browser homepage, styled with the sleek Catppuccin Mocha dark theme.
+    </p>
+
+    <div class="figure-container">
+      <img src="images/glance-dashboard-full.png" alt="Glance Homelab Command Center Full Page">
+      <figcaption>Figure 6: Mohammed's Glance homelab dashboard featuring Core Infrastructure, AI Academy, pwn.college, and threat feeds.</figcaption>
+    </div>
+
+    <p>I structured it into three focused areas:</p>
+    <ul>
+      <li><strong>Column 1 (Core Infrastructure &amp; Cyber Training)</strong>: Quick links to Pi-hole, Proxy Manager, and Cockpit, alongside hands-on training platforms like <strong>pwn.college</strong> (for binary exploitation and Linux internals), TryHackMe, HackTheBox, and LetsDefend.</li>
+      <li><strong>Column 2 (AI Learning &amp; Daily LLMs)</strong>: Quick Search bar, <strong>AI Learning &amp; Certification Roadmaps</strong> (Anthropic Claude courses, DeepLearning.AI LangGraph/Gemini courses, Coursera IBM AI, Model Context Protocol docs) and my daily reasoning engines (Google Gemini, DeepSeek R1, Kimi AI, Qwen).</li>
+      <li><strong>Column 3 (Weather &amp; Intelligence)</strong>: Muscat weather forecast and real-time cybersecurity threat feeds from BleepingComputer and The Hacker News.</li>
+    </ul>
+
+    <h3>Linkwarden: My Research &amp; Web Archival Hub (<code>https://linkwarden.meezok.lab</code>)</h3>
+    <p>
+      Whenever I find an insightful security article, CTF walkthrough, or technical documentation, I save it to Linkwarden. It doesn't just save a bookmark; it captures a complete full-page PDF and readable text copy so I never lose access even if the original website goes offline.
+    </p>
+
+    <div class="figure-container">
+      <img src="images/linkwarden-dashboard-full.png" alt="Linkwarden Web Archival Dashboard">
+      <figcaption>Figure 7: Linkwarden web bookmarking and archival interface.</figcaption>
+    </div>
+
+    <h3>AlmaLinux Cockpit: System Administration Console (<code>https://almalinux.meezok.lab</code>)</h3>
+    <p>
+      For managing the AlmaLinux VM itself, Cockpit gives me a lightweight, modern web console. I can monitor live CPU usage, memory utilization, check system logs, and inspect container health with a single click.
+    </p>
+
+    <div class="figure-container">
+      <img src="images/cockpit-console-full.png" alt="AlmaLinux Cockpit System Console Dashboard">
+      <figcaption>Figure 8: AlmaLinux 9 Cockpit overview tab displaying live CPU, memory, virtual hardware, and system telemetry.</figcaption>
+    </div>
+
+    <h2>7. Real Troubles Faced Along the Way (The War Stories)</h2>
+    <p>
+      Building this setup wasn't always smooth sailing. Here are the four biggest challenges I ran into and how I solved them:
+    </p>
+
+    <div class="callout-story blockquote">
+      <h3>Trouble 1: The Cross-Bridge 502 Bad Gateway Mystery</h3>
+      <p>
+        <strong>What Happened:</strong> After setting up Nginx Proxy Manager in Docker and creating a proxy host pointing to my VM's IP, I opened my browser and was greeted with an ugly <code>502 Bad Gateway</code>.
+      </p>
+      <p>
+        <strong>The Investigation:</strong> The proxy manager was running inside a standard Docker bridge network, while the VM was running on KVM's virtual bridge (<code>virbr0</code>). By default, Docker sets its packet forwarding policy to DROP. Packets trying to hop from Docker's virtual bridge across into KVM's bridge were being silently rejected by the Linux kernel.
+      </p>
+      <p>
+        <strong>How I Fixed It:</strong> Instead of creating complex and brittle forwarding rules, I switched Nginx Proxy Manager to use <code>network_mode: host</code> in <code>docker-compose.yml</code>. This attached NPM directly to the host's native network stack, allowing it to connect smoothly to the KVM bridge via the kernel's normal output routing. The 502 vanished instantly.
+      </p>
+    </div>
+
+    <div class="callout-story blockquote">
+      <h3>Trouble 2: The Cockpit Infinite Redirection Loop (<code>ERR_TOO_MANY_REDIRECTS</code>)</h3>
+      <p>
+        <strong>What Happened:</strong> When I proxied Cockpit through NPM so I could access it at <code>https://almalinux.meezok.lab</code>, the browser spun for a moment and then crashed with <code>ERR_TOO_MANY_REDIRECTS</code>.
+      </p>
+      <p>
+        <strong>The Investigation:</strong> Cockpit's built-in web daemon listens strictly over HTTPS on port 9090. In NPM, I had set the forward scheme to <code>http</code>. Every time NPM attempted an HTTP connection, Cockpit responded with a redirect to HTTPS, creating an infinite redirect loop! On top of that, Cockpit's security layer blocks reverse proxies unless the domain is explicitly whitelisted.
+      </p>
+      <p>
+        <strong>How I Fixed It:</strong>
+      </p>
+      <ul>
+        <li>In NPM, I changed the forwarding scheme from <code>http</code> to <code>https</code> and turned on <strong>Websockets Support</strong> (which Cockpit requires for live graphs and web terminal).</li>
+        <li>Inside the VM, I added <code>Origins = https://almalinux.meezok.lab</code> and <code>ProtocolHeader = X-Forwarded-Proto</code> to <code>/etc/cockpit/cockpit.conf</code>. After restarting the service, Cockpit loaded cleanly with zero redirects.</li>
+      </ul>
+    </div>
+
+    <div class="callout-story blockquote">
+      <h3>Trouble 3: The Glance Container Crash Loop</h3>
+      <p>
+        <strong>What Happened:</strong> After creating my custom <code>glance.yml</code> configuration and launching the container with Docker Compose, the container immediately crashed with: <code>open /app/config/glance.yml: no such file or directory</code>.
+      </p>
+      <p>
+        <strong>The Investigation:</strong> In my compose file, I had mounted <code>./config:/app/config:Z</code>. I had saved the YAML file directly in the root directory (<code>./glance.yml</code>) instead of placing it inside the <code>./config/</code> subdirectory. Glance looked inside its internal <code>/app/config/</code> folder, found nothing, and halted.
+      </p>
+      <p>
+        <strong>How I Fixed It:</strong> Moved the file into <code>config/glance.yml</code> and recreated the container. Once in the expected path, Glance booted instantly.
+      </p>
+    </div>
+
+    <div class="callout-story blockquote">
+      <h3>Trouble 4: Container Go TLS Certificate Rejection</h3>
+      <p>
+        <strong>What Happened:</strong> Glance has built-in site probers that display real-time latency and status badges for homelab links. When I added my internal <code>*.meezok.lab</code> addresses, Glance threw bright red <code>ERROR</code> badges next to all of them.
+      </p>
+      <p>
+        <strong>The Investigation:</strong> Glance is written in Go. Go's HTTP client strictly verifies TLS certificates against system root certificates and immediately aborts connections if it encounters a private wildcard certificate that isn't in its trusted store.
+      </p>
+      <p>
+        <strong>How I Fixed It:</strong> In <code>glance.yml</code>, I added <code>allow-insecure: true</code> to my internal site prober entries. This instructed Glance's prober to monitor service reachability without aborting on private lab certificates.
+      </p>
+    </div>
+
+    <h2>8. Final Thoughts and What's Next</h2>
+    <p>
+      Building this hybrid setup proved that you don't need a noisy rack of servers to have a powerful, secure homelab. A single well-architected Fedora workstation can comfortably power your daily productivity, high-end developer tooling, and an isolated enterprise homelab all at once.
+    </p>
+
+    <p>My next steps for the lab:</p>
+    <ul>
+      <li><strong>Automated Security Compliance</strong>: Running automated OpenSCAP scans against the AlmaLinux VM to achieve baseline DISA STIG hardening.</li>
+      <li><strong>Centralized Telemetry</strong>: Adding Prometheus node exporters to pipe CPU and memory metrics from all VMs into a shared Grafana dashboard.</li>
+    </ul>
+
+    <p>
+      If you're thinking of building a similar setup or experimenting with KVM on Fedora, I hope this walkthrough gives you a helpful roadmap!
+    </p>
+  </main>
+
+  <footer>
+    <div class="shell">
+      &copy; 2026 Mohammed Al-Balushi &bull; Published on <a href="https://notes.meezok-lab.com/">notes.meezok-lab.com</a>
+    </div>
+  </footer>
+</body>
+</html>

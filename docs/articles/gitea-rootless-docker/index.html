@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Step-by-step engineering guide to deploying a self-hosted Gitea Git server using the official Rootless Docker image (UID/GID 1000:1000) and PostgreSQL 16.">
+  <title>Deploying Self-Hosted Gitea with Rootless Docker &amp; PostgreSQL 16 | Mohammed Al-Balushi</title>
+  <style>
+    :root {
+      --bg:#08090d;
+      --surface:#11131c;
+      --border:#1f2433;
+      --text:#f3f4f6;
+      --muted:#9ca3af;
+      --emerald:#10b981;
+      --cyan:#06b6d4;
+      --rose:#f43f5e;
+      --amber:#f59e0b;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:17px/1.7 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .shell { width:min(960px, calc(100% - 32px)); margin:0 auto; }
+    header { padding:28px 0; border-bottom:1px solid var(--border); }
+    .brand { color:var(--muted); font-size:.88rem; letter-spacing:.08em; text-transform:uppercase; font-weight:600; }
+    .author { display:flex; align-items:center; gap:14px; margin-top:18px; color:var(--muted); }
+    .author img { width:48px; height:48px; border-radius:50%; border:2px solid var(--emerald); margin:0; box-shadow:none; }
+    .author a { color:var(--text); text-decoration:none; font-weight:700; }
+    main { padding:48px 0 72px; }
+    h1,h2,h3,h4 { line-height:1.22; color:var(--text); font-weight:700; }
+    h1 { font-size:clamp(2.2rem, 5vw, 3.4rem); margin:0 0 20px; letter-spacing:-.04em; }
+    h2 { font-size:1.6rem; margin-top:54px; padding-top:16px; border-top:1px solid var(--border); color:var(--emerald); }
+    h3 { font-size:1.2rem; margin-top:32px; color:var(--cyan); }
+    p,li { color:#d7dbe4; font-size:1.04rem; }
+    ul, ol { padding-left:24px; }
+    li { margin-bottom:10px; }
+    a { color:var(--cyan); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    blockquote { margin:28px 0; padding:18px 22px; border-left:4px solid var(--emerald); background:var(--surface); color:#cbd5e1; border-radius:0 10px 10px 0; }
+    .callout-warn { border-left-color:var(--amber); background:rgba(245, 158, 11, 0.08); }
+    .figure-container { margin:36px 0; text-align:center; }
+    figure img, .figure-container img { display:block; width:100%; height:auto; border:1px solid var(--border); border-radius:12px; margin:16px 0; background:var(--surface); box-shadow:0 8px 30px rgba(0,0,0,0.5); }
+    figcaption { color:var(--muted); font-size:0.9rem; font-style:italic; margin-top:8px; }
+    code { color:#a7f3d0; background:var(--surface); padding:.2em .45em; border-radius:6px; font-size:0.9em; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; }
+    pre { overflow-x:auto; padding:20px; border:1px solid var(--border); border-radius:12px; background:#0c0e14; margin:24px 0; font-size:0.92rem; line-height:1.6; }
+    pre code { padding:0; background:transparent; color:#e2e8f0; }
+    table { width:100%; border-collapse:collapse; margin:24px 0; background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    th, td { padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); font-size:0.96rem; }
+    th { background:#161926; color:var(--emerald); font-weight:600; }
+    .badge { display:inline-block; padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-right:8px; }
+    .badge-blue { background:rgba(6, 182, 212, 0.15); color:var(--cyan); border:1px solid rgba(6, 182, 212, 0.3); }
+    .badge-green { background:rgba(16, 185, 129, 0.15); color:var(--emerald); border:1px solid rgba(16, 185, 129, 0.3); }
+    footer { padding:36px 0 54px; border-top:1px solid var(--border); color:var(--muted); font-size:.92rem; }
+    @media (max-width:640px) { body { font-size:16px; } main { padding-top:28px; } }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { darkColorScheme: true, background: '#08090d', primaryColor: '#11131c', primaryBorderColor: '#10b981', lineEdgeColor: '#06b6d4' } });
+  </script>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <div class="brand">DevSecOps &amp; Homelab Engineering &bull; Container Hardening</div>
+      <div class="author">
+        <img src="https://github.com/Meezok-PJ.png" alt="Mohammed Al-Balushi Profile">
+        <div>
+          Written by <a href="https://github.com/Meezok-PJ" target="_blank" rel="noopener">Mohammed Al-Balushi</a><br>
+          <span style="font-size:0.85rem;">AI Security Engineer &amp; Cyber Operations Specialist</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div style="margin-bottom:24px;">
+      <a href="../" style="color:var(--emerald);font-weight:700;text-decoration:none;font-size:0.92rem;">&larr; Back to Articles Hub</a> &bull;
+      <a href="../../" style="color:var(--muted);text-decoration:none;font-size:0.92rem;">Home</a>
+    </div>
+
+    <h1>Deploying Self-Hosted Gitea with Rootless Docker &amp; PostgreSQL 16</h1>
+
+    <blockquote>
+      Self-hosting a Git platform in a homelab or internal engineering environment gives you complete control over source code, CI/CD runners, and private documentation. By deploying Gitea's official <strong>Rootless Docker image</strong> alongside PostgreSQL 16, we eliminate container <code>UID 0</code> execution, isolate Git-over-SSH traffic inside Gitea's built-in Go SSH server, and enforce strict host filesystem permissions.
+    </blockquote>
+
+    <div style="margin:20px 0;">
+      <span class="badge badge-green">Gitea 1.22.6 Rootless</span>
+      <span class="badge badge-blue">UID/GID 1000:1000</span>
+      <span class="badge badge-green">PostgreSQL 16</span>
+      <span class="badge badge-blue">Ubuntu 24.04 LTS</span>
+    </div>
+
+    <hr style="border:0;border-top:1px solid var(--border);margin:36px 0;">
+
+    <h2>1. Why Rootless Gitea? Standard vs. Rootless Architecture</h2>
+    <p>
+      In the standard <code>gitea/gitea:latest</code> image, the container entrypoint starts as <code>root</code> (<code>UID 0</code>) to manage an internal OpenSSH daemon and adjust volume permissions via <code>s6-overlay</code>. If a vulnerability is triggered via a malicious repository hook, Git LFS payload, or SSRF vector, an attacker landing inside a <code>UID 0</code> container is one kernel primitive away from host compromise.
+    </p>
+    <p>
+      The official <strong>Rootless image</strong> (<code>docker.gitea.com/gitea:1.22.6-rootless</code>) hardens this boundary across three layers:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Security Dimension</th>
+          <th>Standard Image (<code>gitea:latest</code>)</th>
+          <th>Rootless Image (<code>gitea:latest-rootless</code>)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Container Entrypoint User</strong></td>
+          <td>Starts as <code>root (0:0)</code> via <code>s6-overlay</code></td>
+          <td>Runs exclusively as <code>git (1000:1000)</code></td>
+        </tr>
+        <tr>
+          <td><strong>SSH Server Implementation</strong></td>
+          <td>System OpenSSH daemon (<code>sshd</code>)</td>
+          <td>Built-in Go SSH server on port <code>2222</code></td>
+        </tr>
+        <tr>
+          <td><strong>Host Bind Mount Ownership</strong></td>
+          <td>Auto-chowned by root entrypoint</td>
+          <td>Pre-created on host as <code>1000:1000</code> (<code>0750</code>)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <pre class="mermaid">
+flowchart LR
+    subgraph Host["Ubuntu 24.04 LTS Host (UID/GID 1000:1000)"]
+        subgraph Net["Isolated Bridge Network: gitea-net"]
+            Gitea["gitea:1.22.6-rootless&lt;br/&gt;User: 1000:1000 (git)&lt;br/&gt;Web UI: 3000/tcp | SSH: 2222/tcp"]
+            Postgres["postgres:16-alpine&lt;br/&gt;Internal DB: 5432/tcp"]
+        end
+        DataVol["./data -&gt; /var/lib/gitea&lt;br/&gt;(chown 1000:1000, chmod 750)"]
+        ConfigVol["./config -&gt; /etc/gitea&lt;br/&gt;(chown 1000:1000, chmod 750)"]
+        PgVol["./postgres -&gt; /var/lib/postgresql/data"]
+    end
+    DataVol --&gt; Gitea
+    ConfigVol --&gt; Gitea
+    PgVol --&gt; Postgres
+    Gitea --&gt; Postgres
+    </pre>
+
+    <h2>2. Host Directory Preparation &amp; Permission Enforcement</h2>
+    <p>
+      Because a rootless container running as <code>1000:1000</code> cannot change ownership of root-owned directories on startup, we must explicitly create the <code>data/</code> and <code>config/</code> directories and assign ownership to <code>1000:1000</code> before launching Docker Compose:
+    </p>
+    <pre><code># 1. Create the stack directory structure
+mkdir -p ~/gitea/{data,config,postgres}
+
+# 2. Enforce 1000:1000 ownership and restrictive permissions
+sudo chown -R 1000:1000 ~/gitea/data ~/gitea/config
+chmod 750 ~/gitea/data ~/gitea/config</code></pre>
+
+    <p>
+      Next, store the database credentials in a mode-<code>0600</code> <code>.env</code> file so secrets never sit in plain text inside <code>docker-compose.yml</code>:
+    </p>
+    <pre><code>cat &gt; ~/gitea/.env &lt;&lt; 'EOF'
+GITEA_DB_PASSWORD=&lt;STRONG_DB_PASSWORD&gt;
+EOF
+chmod 600 ~/gitea/.env</code></pre>
+
+    <h2>3. Production Docker Compose Stack</h2>
+    <p>
+      Create <code>~/gitea/docker-compose.yml</code> following the official <a href="https://docs.gitea.com/installation/install-with-docker-rootless/" target="_blank" rel="noopener">Gitea Rootless Docker specification</a>, pairing <code>gitea:1.22.6-rootless</code> with <code>postgres:16-alpine</code> over an internal bridge network:
+    </p>
+    <pre><code>services:
+  server:
+    image: docker.gitea.com/gitea:1.22.6-rootless
+    container_name: gitea
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=db:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
+      - GITEA__server__DOMAIN=gitea.homelab.local
+      - GITEA__server__SSH_DOMAIN=gitea.homelab.local
+      - GITEA__server__ROOT_URL=http://gitea.homelab.local:3000/
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__SSH_PORT=2222
+      - GITEA__server__START_SSH_SERVER=true
+    volumes:
+      - ./data:/var/lib/gitea
+      - ./config:/etc/gitea
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000"
+      - "2222:2222"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - gitea-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: gitea-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=${GITEA_DB_PASSWORD}
+      - POSTGRES_DB=gitea
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gitea-net
+
+networks:
+  gitea-net:
+    external: false</code></pre>
+
+    <p>Start the stack and verify that the container runs under <code>uid=1000(git)</code>:</p>
+    <pre><code>cd ~/gitea
+docker compose up -d
+docker exec gitea id
+# Output: uid=1000(git) gid=1000(git) groups=1000(git)</code></pre>
+
+    <h2>4. Web Installer Walkthrough &amp; Administrator Setup</h2>
+    <h3>Step 1: Verify Rootless Paths &amp; Server Settings</h3>
+    <p>
+      Open <code>http://gitea.homelab.local:3000/</code> in your browser. The installer automatically populates the PostgreSQL connection settings, repository root path (<code>/var/lib/gitea/git/repositories</code>), run user (<code>git</code>), and internal SSH port (<code>2222</code>):
+    </p>
+    <div class="figure-container">
+      <img src="../../assets/gitea-rootless-01-initial-config.png" alt="Gitea Rootless Initial Configuration">
+      <figcaption>Figure 1: Gitea Initial Configuration showing rootless paths, run user git, and SSH port 2222.</figcaption>
+    </div>
+
+    <h3>Step 2: Provision the Dedicated Administrator Account</h3>
+    <p>
+      Expand <strong>Optional Settings &rarr; Administrator Account Settings</strong> and define an explicit administrator account before clicking <strong>Install Gitea</strong>:
+    </p>
+    <div class="figure-container">
+      <img src="../../assets/gitea-rootless-02-admin-setup.png" alt="Gitea Administrator Account Setup">
+      <figcaption>Figure 2: Configuring the initial administrator account during first-boot setup.</figcaption>
+    </div>
+
+    <p>
+      Once installation completes, Gitea writes <code>/etc/gitea/app.ini</code> inside the <code>config/</code> volume and loads the main workspace dashboard:
+    </p>
+    <div class="figure-container">
+      <img src="../../assets/gitea-rootless-03-dashboard.png" alt="Gitea Main Dashboard">
+      <figcaption>Figure 3: Authenticated Gitea dashboard immediately after rootless installation.</figcaption>
+    </div>
+
+    <h2>5. Repository Verification &amp; Site Administration Audit</h2>
+    <p>
+      To validate end-to-end Git storage and internal SSH/HTTP routing, create an initial repository (<code>homelab-infra-demo</code>) initialized with a default <code>README.md</code> on branch <code>main</code>:
+    </p>
+    <div class="figure-container">
+      <img src="../../assets/gitea-rootless-04-create-repo.png" alt="Create Repository in Gitea">
+      <figcaption>Figure 4: Initializing a verification repository on the main branch.</figcaption>
+    </div>
+
+    <div class="figure-container">
+      <img src="../../assets/gitea-rootless-05-repo-ready.png" alt="Initialized Repository View">
+      <figcaption>Figure 5: Repository initialized and ready for HTTP (:3000) and SSH (:2222) Git operations.</figcaption>
+    </div>
+
+    <p>
+      Finally, navigate to <strong>Site Administration &rarr; Configuration &rarr; Summary</strong> (<code>/admin/config</code>) to confirm that the server is running as <code>git</code> in <code>Prod</code> mode with the built-in SSH server active:
+    </p>
+    <div class="figure-container">
+      <img src="../../assets/gitea-rootless-06-site-admin.png" alt="Gitea Site Administration Configuration Summary">
+      <figcaption>Figure 6: Site Administration summary confirming Run As Username git and built-in SSH server.</figcaption>
+    </div>
+
+    <h2>6. Post-Install Hardening &amp; Automated Health Checks</h2>
+    <p>
+      Gitea exposes a built-in health endpoint at <code>/api/healthz</code> that verifies both cache and PostgreSQL database connectivity:
+    </p>
+    <pre><code>curl -s http://localhost:3000/api/healthz | jq .
+{
+  "status": "pass",
+  "description": "Meezok Homelab Git",
+  "checks": {
+    "cache:ping": [{ "status": "pass" }],
+    "database:ping": [{ "status": "pass" }]
+  }
+}</code></pre>
+
+    <blockquote class="callout-warn">
+      <strong>Hardening Tip:</strong> For private homelab or internal engineering servers, lock down public self-registration after creating your user accounts by setting <code>DISABLE_REGISTRATION = true</code> and <code>REQUIRE_SIGNIN_VIEW = true</code> under the <code>[service]</code> section of <code>~/gitea/config/app.ini</code>.
+    </blockquote>
+  </main>
+
+  <footer>
+    <div class="shell">
+      Published on <a href="https://notes.meezok-lab.com">notes.meezok-lab.com</a> &bull; <a href="../">All Technical Articles</a> &bull; <a href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/self-hosted-gitea-rootless-docker.md" target="_blank" rel="noopener">Markdown Source</a>
+    </div>
+  </footer>
+</body>
+</html>

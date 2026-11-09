@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Module 07 | Linux Academy</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #11131c;
+      --surface-hover: #171b28;
+      --border: #1f2433;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --emerald: #10b981;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.75 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 24px 0; border-bottom: 1px solid var(--border); }
+    .brand-row { display: flex; justify-content: space-between; align-items: center; }
+    .brand { color: var(--muted); font-size: .88rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: .92rem; font-weight: 600; }
+    .nav-links a:hover { color: var(--emerald); }
+    
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--muted); margin: 24px 0 16px; }
+    .breadcrumbs a { color: var(--cyan); text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    
+    main { padding: 12px 0 80px; }
+    h1, h2, h3, h4 { line-height: 1.22; color: var(--text); letter-spacing: -.03em; }
+    h1 { font-size: clamp(2.2rem, 5.5vw, 3.4rem); margin: 0 0 16px; letter-spacing: -.04em; }
+    h2 { font-size: 1.8rem; margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.3rem; margin-top: 32px; color: #e2e8f0; }
+    
+    p, li { color: #d7dbe4; }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    
+    .safety-banner {
+      margin: 28px 0;
+      padding: 22px 24px;
+      background: linear-gradient(135deg, #1c1318 0%, #11131c 100%);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-left: 5px solid var(--rose);
+      border-radius: 10px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .safety-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .safety-title { font-weight: 800; font-size: 1.05rem; color: #fecdd3; margin-bottom: 4px; }
+    .safety-desc { color: #e2e8f0; font-size: 0.92rem; line-height: 1.6; }
+    
+    .callout {
+      margin: 28px 0;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--cyan);
+      background: var(--surface);
+      border-radius: 8px;
+    }
+    .callout.amber { border-left-color: var(--amber); }
+    .callout.emerald { border-left-color: var(--emerald); }
+    .callout-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; color: var(--text); }
+    
+    .motion-infographic {
+      margin: 36px 0;
+      padding: 28px 24px;
+      background: radial-gradient(circle at center, #111524 0%, #090b12 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .infographic-title {
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--emerald);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .infographic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .infographic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .infographic-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--cyan);
+      box-shadow: 0 10px 25px -8px rgba(6, 182, 212, 0.25);
+    }
+    .infographic-card:active { transform: scale(0.98); }
+    .infographic-card-title { font-weight: 700; font-size: 0.98rem; color: var(--text); margin-bottom: 8px; }
+    .infographic-card-desc { font-size: 0.88rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    
+    .figure-container {
+      margin: 32px 0;
+      background: #0d0f16;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow: hidden;
+    }
+    .figure-container img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .figure-caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: .88rem;
+      text-align: center;
+    }
+    
+    table { width: 100%; border-collapse: collapse; margin: 28px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); font-size: .95rem; }
+    th { background: var(--surface); color: var(--emerald); font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+    
+    code { color: #b8f6dc; background: #161a26; padding: .15em .4em; border-radius: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .9em; }
+    pre { overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: #0b0d13; }
+    pre code { padding: 0; background: transparent; font-size: .92em; }
+    
+    .module-nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    .btn-nav:hover {
+      border-color: var(--emerald);
+      color: var(--emerald);
+      transform: translateY(-2px);
+    }
+    .btn-nav.primary {
+      background: #062b22;
+      color: var(--emerald);
+      border-color: var(--emerald);
+    }
+    .btn-nav.primary:hover {
+      background: var(--emerald);
+      color: #062b22;
+    }
+    
+    footer { padding: 36px 0 54px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell brand-row">
+      <div class="brand">Linux Engineering &amp; Homelab Academy</div>
+      <div class="nav-links">
+        <a href="../">Academy Hub</a>
+        <a href="../../">Docs Home</a>
+        <a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="breadcrumbs">
+      <a href="../">Academy Hub</a> &rarr; <span>Module 07: Docker Container Engineering & Compose Stacks</span>
+    </div>
+
+    <h1>Module 07: Docker Container Engineering & Compose Stacks</h1>
+
+    <!-- SAFETY WARNING CALLOUT -->
+    <div class="safety-banner">
+      <div class="safety-icon">⚠️</div>
+      <div>
+        <div class="safety-title">Sandbox Environment Warning</div>
+        <div class="safety-desc">
+          Execute all commands and scripts strictly inside an isolated <strong>Virtual Machine sandbox</strong>. Never perform bulk permission changes, system removals, or daemon restarts on unbacked host environments.
+        </div>
+      </div>
+    </div>
+
+    
+<p style="font-size:1.1rem;color:#cbd5e1;">Deep-dive into Docker container architecture vs VMs, CLI lifecycle commands, multi-stage production Dockerfiles, volume persistence, bridge networking, and multi-service docker-compose stacks.</p>
+
+<hr>
+
+<h2>1. Docker Container Architecture vs. Virtual Machines</h2>
+
+<div class="motion-infographic">
+  <div class="infographic-title">Docker Engine Architecture Mind Map</div>
+  <div class="infographic-grid">
+    <div class="infographic-card">
+      <div class="infographic-card-title">1. Engine Architecture</div>
+      <p class="infographic-card-desc"><code>dockerd</code> daemon, REST API client, <code>containerd</code> OCI runtime, Linux cgroups &amp; namespaces.</p>
+    </div>
+    <div class="infographic-card">
+      <div class="infographic-card-title">2. Image Building</div>
+      <p class="infographic-card-desc">Multi-stage <code>Dockerfile</code>, build caching, minimal base images (Alpine/Distroless), non-root users.</p>
+    </div>
+    <div class="infographic-card">
+      <div class="infographic-card-title">3. Lifecycle Operations</div>
+      <p class="infographic-card-desc">Interactive: <code>run -it --rm</code>, in-container: <code>exec -it sh</code>, health: <code>stats</code>, graceful: <code>stop</code> &rarr; <code>rm</code>.</p>
+    </div>
+    <div class="infographic-card">
+      <div class="infographic-card-title">4. Volume Persistence</div>
+      <p class="infographic-card-desc">Bind mounts (<code>./src:/app:ro</code>), named volumes (<code>/var/lib/docker</code>), database state isolation.</p>
+    </div>
+    <div class="infographic-card">
+      <div class="infographic-card-title">5. Networking Modes</div>
+      <p class="infographic-card-desc">Default <code>bridge</code>, direct <code>host</code> bypass, custom isolated subnets, port mapping (<code>-p 8080:80</code>).</p>
+    </div>
+    <div class="infographic-card">
+      <div class="infographic-card-title">6. Compose Stacks</div>
+      <p class="infographic-card-desc">Multi-service <code>docker-compose.yml</code>, dependency ordering (<code>depends_on</code>), environment secrets (<code>.env</code>).</p>
+    </div>
+  </div>
+</div>
+
+<div class="figure-container">
+  <img src="../../../assets/linux/docker-architecture-overview.png" alt="Docker Engine Architecture Overview">
+  <div class="figure-caption">Figure 1: Docker Engine Architecture — Client CLI, REST API, Daemon, and Storage/Networking Drivers.</div>
+</div>
+
+<div class="figure-container">
+  <img src="../../../assets/linux/docker-container-lifecycle.png" alt="Docker Container State Lifecycle">
+  <div class="figure-caption">Figure 2: Docker Container State Lifecycle — Created, Running, Paused, Stopped, and Removed.</div>
+</div>
+
+<hr>
+
+<h2>2. Essential Docker CLI Commands</h2>
+<pre><code># Run an ephemeral interactive Ubuntu container
+docker run -it --rm ubuntu:24.04 bash
+
+# Run a detached Nginx web server with host port publishing
+docker run -d --name my_webserver -p 8080:80 --restart unless-stopped nginx:alpine
+
+# Execute an interactive shell inside a running container
+docker exec -it my_webserver sh
+
+# Inspect live CPU and Memory usage statistics across containers
+docker stats --no-stream
+
+# View live container log stream
+docker logs -f --tail=100 my_webserver</code></pre>
+
+<hr>
+
+<h2>3. Multi-Stage Production Dockerfile</h2>
+<pre><code># Stage 1: Build stage
+FROM golang:1.24-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server .
+
+# Stage 2: Minimal runtime stage
+FROM alpine:3.20
+WORKDIR /app
+RUN adduser -D -u 1000 appuser
+COPY --from=builder /app/server /app/server
+USER appuser
+EXPOSE 8080
+ENTRYPOINT ["/app/server"]</code></pre>
+
+<hr>
+
+<h2>4. Multi-Service Orchestration (docker-compose.yml)</h2>
+<pre><code>services:
+  web:
+    image: node:20-alpine
+    container_name: web_app
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./src:/app:ro
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=appuser
+      - DB_PASSWORD=secretpassword
+    depends_on:
+      - db
+    networks:
+      - app_network
+
+  db:
+    image: postgres:16-alpine
+    container_name: db_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: appdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge</code></pre>
+
+<pre><code># Deploy entire stack in background
+docker compose up -d
+
+# Verify running services
+docker compose ps
+
+# Stop stack
+docker compose down</code></pre>
+
+
+    <!-- MODULE NAVIGATION -->
+    <div class="module-nav-bar">
+      <a href="../06-network-and-storage-engineering/" class="btn-nav">&larr; Module 06 (Storage & LVM)</a>
+      <a href="../08-homelab-services-and-apps/" class="btn-nav primary">Next: Module 08 (Homelab Services) &rarr;</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>&copy; 2026 Mohammed Al-Balushi &bull; <a href="https://notes.meezok-lab.com" style="color:var(--cyan);text-decoration:none;">notes.meezok-lab.com</a></p>
+      <p><a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener" style="color:var(--emerald);text-decoration:none;font-weight:700;">Meezok-PJ/share Repository</a></p>
+    </div>
+  </footer>
+</body>
+</html>

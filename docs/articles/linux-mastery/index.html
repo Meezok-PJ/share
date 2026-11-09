@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="My Linux Refresher: A fresh, friendly, practitioner-focused guide covering command-line fundamentals, modern shell tools, systemd, storage, Docker containerization, and sandboxing AI scripts.">
+  <title>My Linux Refresher: Command-Line, Docker, Sandboxes &amp; AI Automation</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #11131c;
+      --surface-hover: #171b28;
+      --border: #1f2433;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --emerald: #10b981;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.75 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { width: min(1040px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .brand-row { display: flex; justify-content: space-between; align-items: center; }
+    .brand { color: var(--muted); font-size: .88rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: .92rem; font-weight: 600; }
+    .nav-links a:hover { color: var(--emerald); }
+    
+    .author { display: flex; align-items: center; gap: 14px; margin-top: 18px; color: var(--muted); }
+    .author img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--emerald); }
+    .author a { color: var(--text); text-decoration: none; font-weight: 700; }
+    
+    main { padding: 48px 0 80px; }
+    .back-nav { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; color: var(--emerald); font-weight: 700; text-decoration: none; font-size: .92rem; }
+    .back-nav:hover { text-decoration: underline; }
+    
+    h1, h2, h3, h4 { line-height: 1.22; color: var(--text); letter-spacing: -.03em; }
+    h1 { font-size: clamp(2.3rem, 6vw, 3.6rem); margin: 0 0 20px; letter-spacing: -.045em; }
+    h2 { font-size: 1.85rem; margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.3rem; margin-top: 32px; color: #e2e8f0; }
+    
+    p, li { color: #d7dbe4; }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    
+    .intro-box {
+      margin: 28px 0 36px;
+      padding: 24px 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--emerald);
+      border-radius: 12px;
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: #e2e8f0;
+    }
+    
+    .callout {
+      margin: 28px 0;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--cyan);
+      background: var(--surface);
+      border-radius: 8px;
+    }
+    .callout.amber { border-left-color: var(--amber); }
+    .callout-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; color: var(--text); }
+    
+    .safety-banner {
+      margin: 32px 0;
+      padding: 22px 26px;
+      background: linear-gradient(135deg, #1c1318 0%, #11131c 100%);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-left: 5px solid var(--rose);
+      border-radius: 10px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .safety-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .safety-title { font-weight: 800; font-size: 1.05rem; color: #fecdd3; margin-bottom: 4px; }
+    .safety-desc { color: #e2e8f0; font-size: 0.92rem; line-height: 1.6; }
+    
+    /* Module Grid */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin: 36px 0;
+    }
+    .module-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+      text-decoration: none;
+      position: relative;
+    }
+    .module-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--emerald);
+      box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.25);
+    }
+    .module-card:active {
+      transform: scale(0.98);
+    }
+    .module-num {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+    .module-card-title {
+      font-size: 1.22rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 12px;
+      line-height: 1.35;
+    }
+    .module-card-desc {
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin: 0 0 20px;
+      line-height: 1.6;
+    }
+    .module-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .module-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: #182030;
+      color: var(--cyan);
+      border: 1px solid #06b6d433;
+    }
+    .start-link {
+      font-weight: 700;
+      color: var(--emerald);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    footer { padding: 36px 0 54px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+    @media (max-width: 640px) {
+      body { font-size: 16px; }
+      main { padding-top: 32px; }
+      .footer-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell brand-row">
+      <div class="brand">My Linux Refresher &bull; Notes &amp; Lab Guides</div>
+      <div class="nav-links">
+        <a href="../../">Docs Home</a>
+        <a href="../">Articles Hub</a>
+        <a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div style="margin-top:16px;">
+      <a href="../" class="back-nav">&larr; Back to Articles Hub</a>
+    </div>
+
+    <div class="author">
+      <img src="../../assets/mohammed-al-balushi-profile.png" alt="Mohammed Al-Balushi">
+      <div>
+        Written by <a href="https://github.com/Meezok-PJ" rel="noopener">Mohammed Al-Balushi</a><br>
+        <span>AI Security Developer and Cyber Operations Specialist</span>
+      </div>
+    </div>
+
+    <h1>My Linux Refresher: From Command-Line Foundations to Docker, Sandboxes &amp; AI Automation</h1>
+
+    <!-- FRIENDLY INTRODUCTION -->
+    <div class="intro-box">
+      <p style="margin:0 0 14px;">
+        <strong>Hello and welcome!</strong> I wanted to share a fresh, practical summary of my learning journey across Linux system administration, virtualization, and homelab engineering. Rather than structuring this as a rigid academic textbook, I put this together as <strong>My Linux Refresher</strong> — a friendly, respectable, and reliable hands-on companion that anyone can easily read, explore, and use to level up their day-to-day workflow.
+      </p>
+      <p style="margin:0;">
+        Whether you are spinning up your first Ubuntu Server virtual machine, fine-tuning your shell dotfiles with modern Rust utilities, or looking for a fast lookup on systemd service daemons and LVM storage pools, this refresher brings all the essential concepts into one structured place.
+      </p>
+    </div>
+
+    <!-- WHY LEARN DOCKER & AI SANDBOXING -->
+    <div class="callout">
+      <div class="callout-title">Why Learn Docker &amp; Sandbox AI Automation?</div>
+      <p style="margin:0 0 10px;">
+        In modern operations and security engineering, learning Docker is no longer just about deploying web servers — it has become an essential <strong>security boundary and isolation sandbox</strong>.
+      </p>
+      <p style="margin:0 0 10px;">
+        When pairing with <strong>autonomous AI agents</strong>, code assistants, or testing third-party tools, giving AI the freedom to execute shell scripts and automate workflows is incredibly powerful. However, running AI-generated scripts directly on your host machine introduces serious risk to system stability and private credentials.
+      </p>
+      <p style="margin:0;">
+        Containerization solves this gracefully: Docker provides a lightweight, disposable sandbox where scripts, tools, and AI tasks execute in milliseconds without touching your underlying operating system. If a task fails or misbehaves, the container is destroyed without leaving a trace.
+      </p>
+    </div>
+
+    <!-- SAFETY WARNING CALLOUT -->
+    <div class="safety-banner">
+      <div class="safety-icon">⚠️</div>
+      <div>
+        <div class="safety-title">Educational Sandbox Notice</div>
+        <div class="safety-desc">
+          The administrative commands, service modifications, and disk partitioning operations shared in this refresher are intended strictly for educational learning inside an <strong>isolated Virtual Machine sandbox</strong> (e.g. Ubuntu Server VM, Fedora VM, or Proxmox lab). <strong>Never execute untested administrative or destructive commands on your daily driver or production host system.</strong>
+        </div>
+      </div>
+    </div>
+
+    <h2>Chapters in This Refresher</h2>
+    <p>Jump into any chapter below or follow them sequentially for a full hands-on review:</p>
+
+    <div class="modules-grid">
+      <!-- Chapter 1 -->
+      <a class="module-card" href="./01-getting-started-and-vms/">
+        <div>
+          <div class="module-num">Chapter 01 &bull; Foundations</div>
+          <div class="module-card-title">Getting Started &amp; Virtual Machine Lab Setup</div>
+          <div class="module-card-desc">Hypervisor installation (VirtualBox/VMware/Proxmox), installing Ubuntu Server 24.04/25.04 &amp; Fedora, network modes (NAT vs Bridged), and baseline first-boot hardening.</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">VM Setup</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Chapter 2 -->
+      <a class="module-card" href="./02-shells-and-modern-tools/">
+        <div>
+          <div class="module-num">Chapter 02 &bull; Productivity</div>
+          <div class="module-card-title">Shells, Prompts &amp; Modern CLI Toolkit</div>
+          <div class="module-card-desc">Bash vs Zsh vs Fish, configuring <code>/etc/profile</code> &amp; <code>~/.bashrc</code>, Starship prompt, tmux multiplexing, and modern Rust tools (<code>eza</code>, <code>bat</code>, <code>ripgrep</code>, <code>fzf</code>, <code>zoxide</code>).</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">Shell Tools</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Chapter 3 -->
+      <a class="module-card" href="./03-filesystem-and-text-pipelines/">
+        <div>
+          <div class="module-num">Chapter 03 &bull; Core UNIX</div>
+          <div class="module-card-title">Filesystem Architecture (FHS) &amp; Text Pipelines</div>
+          <div class="module-card-desc">The Filesystem Hierarchy Standard, Virtual VFS (<code>/proc</code>, <code>/sys</code>), standard streams (<code>stdin</code>, <code>stdout</code>, <code>stderr</code>), and the Big 4 processors (<code>grep</code>, <code>awk</code>, <code>sed</code>, <code>cut</code>).</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">Streams &amp; FHS</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Chapter 4 -->
+      <a class="module-card" href="./04-permissions-and-user-security/">
+        <div>
+          <div class="module-num">Chapter 04 &bull; Security</div>
+          <div class="module-card-title">User Administration, Permissions &amp; Sudoers</div>
+          <div class="module-card-desc">User and group creation (<code>useradd</code>, <code>gpasswd</code>), 3x3 permission model (octal <code>chmod 755/600</code> vs symbolic), SUID/SGID/Sticky bits, and <code>visudo</code> security rules.</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">Privileges</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Chapter 5 -->
+      <a class="module-card" href="./05-process-control-and-systemd/">
+        <div>
+          <div class="module-num">Chapter 05 &bull; Operations</div>
+          <div class="module-card-title">Kernel Architecture, Process Control &amp; Systemd</div>
+          <div class="module-card-desc">Kernel inspection (<code>uname</code>), process monitoring (<code>ps -u</code>, <code>htop</code>, <code>pgrep</code>), signals (15/9/1), background jobs, custom <code>.service</code> unit files, and <code>journalctl</code> log forensics.</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">Systemd &amp; Logs</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Chapter 6 -->
+      <a class="module-card" href="./06-network-and-storage-engineering/">
+        <div>
+          <div class="module-num">Chapter 06 &bull; Storage &amp; Net</div>
+          <div class="module-card-title">Network Sockets, SSH Transfers &amp; Storage LVM</div>
+          <div class="module-card-desc">Socket auditing (<code>ss -tulpn</code>), IP routing, encrypted syncs (<code>rsync -avzP</code>), disk partitioning (<code>fdisk</code>), LVM logical volume pools, Btrfs RAID mirrors, and tar archiving.</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">Networking &amp; LVM</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Chapter 7 -->
+      <a class="module-card" href="./07-docker-and-container-engineering/">
+        <div>
+          <div class="module-num">Chapter 07 &bull; Containers &amp; AI</div>
+          <div class="module-card-title">Docker Container Engineering &amp; Compose Stacks</div>
+          <div class="module-card-desc">Docker engine architecture vs VMs, container lifecycle (<code>run</code>, <code>exec</code>, <code>stats</code>), multi-stage Dockerfiles, and multi-service <code>docker-compose.yml</code> stacks with volume persistence.</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">Docker &amp; Compose</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Chapter 8 -->
+      <a class="module-card" href="./08-homelab-services-and-apps/">
+        <div>
+          <div class="module-num">Chapter 08 &bull; Homelab</div>
+          <div class="module-card-title">Self-Hosted Homelab Services &amp; Applications</div>
+          <div class="module-card-desc">Fedora host tuning, CasaOS automated deployment, containerized Code-Server browser IDE, Pi-hole DNS ad-blocking, NetBird mesh VPN, and Ollama local AI model hosting.</div>
+        </div>
+        <div class="module-footer">
+          <span class="module-pill">Homelab &amp; Apps</span>
+          <span class="start-link">Read Chapter &rarr;</span>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>&copy; 2026 Mohammed Al-Balushi &bull; <a href="https://notes.meezok-lab.com" style="color:var(--cyan);text-decoration:none;">notes.meezok-lab.com</a></p>
+      <p><a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener" style="color:var(--emerald);text-decoration:none;font-weight:700;">Meezok-PJ/share Repository</a></p>
+    </div>
+  </footer>
+</body>
+</html>

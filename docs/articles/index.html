@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Published technical articles, architectural blueprints, and security engineering writeups by Mohammed Al-Balushi on notes.meezok-lab.com.">
+  <title>Technical Articles | Meezok Documentation Vault</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #11131c;
+      --surface-hover: #171b28;
+      --border: #1f2433;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --emerald: #10b981;
+      --cyan: #06b6d4;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.7 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+    header { border-bottom: 1px solid var(--border); }
+    .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .84rem; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+    .brand:hover { color: var(--text); }
+    .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); }
+    
+    .nav-links { display: flex; align-items: center; gap: 18px; font-size: .92rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-weight: 500; transition: color 150ms ease; }
+    .nav-links a:hover, .nav-links a.active { color: var(--cyan); }
+
+    main { padding: 64px 0 80px; }
+    .eyebrow { margin: 0 0 12px; color: var(--emerald); font-size: .84rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 850px; margin: 0; font-size: clamp(2.4rem, 6vw, 4.2rem); letter-spacing: -.045em; line-height: 1.15; }
+    .intro { max-width: 720px; margin: 18px 0 0; color: #d7dbe4; font-size: 1.15rem; }
+
+    .articles-grid { display: flex; flex-direction: column; gap: 24px; margin-top: 48px; }
+    .article-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+    .article-card:hover {
+      border-color: var(--cyan);
+      background: var(--surface-hover);
+      transform: translateY(-2px);
+    }
+
+    .badge-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: #062b22;
+      color: var(--emerald);
+      border: 1px solid #10b98144;
+    }
+    .badge.cyan {
+      background: #082830;
+      color: var(--cyan);
+      border-color: #06b6d444;
+    }
+
+    .article-title { margin: 0 0 10px; font-size: 1.5rem; line-height: 1.25; }
+    .article-title a { color: var(--text); text-decoration: none; }
+    .article-title a:hover { color: var(--cyan); }
+    .article-summary { margin: 0 0 20px; color: #9ca3af; font-size: .98rem; }
+
+    .card-actions { display: flex; align-items: center; gap: 16px; margin-top: auto; }
+    .btn-read {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      background: var(--emerald);
+      color: #062b22;
+      font-weight: 700;
+      font-size: .88rem;
+      text-decoration: none;
+      transition: background 150ms ease;
+    }
+    .btn-read:hover { background: #34d399; }
+    
+    .btn-source {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: .86rem;
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    .btn-source:hover { color: var(--cyan); }
+
+    footer { padding: 36px 0 48px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+
+    @media (max-width: 768px) {
+      .article-card { grid-template-columns: 1fr; padding: 24px; }
+      .footer-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell nav">
+      <a href="../" class="brand">
+        <span class="brand-dot"></span>
+        MEEZOK NOTES
+      </a>
+      <div class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">Articles</a>
+        <a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="eyebrow">Public Technical Library</div>
+    <h1>Published Articles &amp; Blueprints</h1>
+    <p class="intro">Deep-dive technical articles on detection engineering, local-first agentic memory architectures, zero-trust delegation, and knowledge systems.</p>
+
+    <div class="articles-grid">
+      <!-- Article: Self-Hosted Gitea Rootless Docker -->
+      <article class="article-card">
+        <div>
+          <div class="badge-row">
+            <span class="badge">DevSecOps &amp; Homelab</span>
+            <span class="badge cyan">Rootless Docker</span>
+          </div>
+          <h2 class="article-title">
+            <a href="./gitea-rootless-docker/">Deploying Self-Hosted Gitea with Rootless Docker &amp; PostgreSQL 16</a>
+          </h2>
+          <p class="article-summary">Step-by-step deployment of Gitea 1.22.6 Rootless (UID/GID 1000:1000) and PostgreSQL 16 on Ubuntu 24.04 LTS: host bind-mount permission hardening, built-in Go SSH server isolation on port 2222, administrator provisioning, and automated health checks.</p>
+          <div class="card-actions">
+            <a href="./gitea-rootless-docker/" class="btn-read">Read Article &rarr;</a>
+            <a href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/self-hosted-gitea-rootless-docker.md" target="_blank" rel="noopener" class="btn-source">View Markdown on GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Article: Fedora Workstation & Homelab Architecture Showcase -->
+      <article class="article-card">
+        <div>
+          <div class="badge-row">
+            <span class="badge">Virtualization &amp; Sysadmin</span>
+            <span class="badge cyan">Architecture Showcase</span>
+          </div>
+          <h2 class="article-title">
+            <a href="./fedora-homelab-architecture/">Fedora Workstation and Virtualized Homelab: Full Architecture &amp; Engineering Showcase</a>
+          </h2>
+          <p class="article-summary">Complete architectural breakdown: Fedora Workstation 44, KVM virtualization, sanitized hybrid networking, Neovim/Herdr developer tooling, split-horizon Pi-hole DNS, host-mode reverse proxying, and production microservices (Glance, Linkwarden, Cockpit).</p>
+          <div class="card-actions">
+            <a href="./fedora-homelab-architecture/" class="btn-read">Read Article &rarr;</a>
+            <a href="https://github.com/Meezok-PJ/share/blob/main/docs/homelab/Fedora-Workstation-and-Homelab-Architecture-Showcase.md" target="_blank" rel="noopener" class="btn-source">View Markdown on GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Article 0: Linux Mastery Course -->
+      <article class="article-card">
+        <div>
+          <div class="badge-row">
+            <span class="badge">Linux Engineering</span>
+            <span class="badge cyan">Hands-On Course</span>
+          </div>
+          <h2 class="article-title">
+            <a href="./linux-mastery/">My Linux Refresher: Command-Line, Docker &amp; AI Sandboxes</a>
+          </h2>
+          <p class="article-summary">A friendly, practitioner-focused refresher covering command-line fundamentals, modern shell tools, systemd, storage, Docker containerization, and sandboxing AI scripts.</p>
+          <div class="card-actions">
+            <a href="./linux-mastery/" class="btn-read">Read Article &rarr;</a>
+            <a href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/linux-command-line-and-sysadmin-course.md" target="_blank" rel="noopener" class="btn-source">View Markdown on GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Article 1: MITRE Trilogy -->
+      <article class="article-card">
+        <div>
+          <div class="badge-row">
+            <span class="badge">Detection Engineering</span>
+            <span class="badge cyan">SOC Operations</span>
+          </div>
+          <h2 class="article-title">
+            <a href="./mitre-trilogy/">Beyond MITRE ATT&amp;CK: Operationalizing the Complete Trilogy (ATT&amp;CK + CAR + D3FEND)</a>
+          </h2>
+          <p class="article-summary">Why ATT&amp;CK alone is incomplete without MITRE CAR (query logic, Splunk SPL/Elastic EQL) and MITRE D3FEND (structural countermeasures).</p>
+          <div class="card-actions">
+            <a href="./mitre-trilogy/" class="btn-read">Read Article &rarr;</a>
+            <a href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/operationalizing-the-mitre-trilogy-attack-car-d3fend.md" target="_blank" rel="noopener" class="btn-source">View Markdown on GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Article 2: AI Workspace -->
+      <article class="article-card">
+        <div>
+          <div class="badge-row">
+            <span class="badge">AI Architecture</span>
+            <span class="badge cyan">Second Brain</span>
+          </div>
+          <h2 class="article-title">
+            <a href="./ai-workspace/">Why Now Is the Time to Build Your AI Workspace</a>
+          </h2>
+          <p class="article-summary">Moving beyond basic chat prompts by building a durable, portable AI operating workspace with Obsidian Second Brain, local Ollama models, reusable skills, and Docker sandboxes.</p>
+          <div class="card-actions">
+            <a href="./ai-workspace/" class="btn-read">Read Article &rarr;</a>
+            <a href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/why-now-is-the-time-to-build-your-ai-workspace.html" target="_blank" rel="noopener" class="btn-source">View Markdown on GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Article 3: Agentic Wiki -->
+      <article class="article-card">
+        <div>
+          <div class="badge-row">
+            <span class="badge">Knowledge Systems</span>
+            <span class="badge cyan">Local RAG</span>
+          </div>
+          <h2 class="article-title">
+            <a href="./agentic-wiki/">Build a Local Agentic Wiki Over Your Notes</a>
+          </h2>
+          <p class="article-summary">Full-stack architecture for grounded AI search across private vaults using Go 1.24, PostgreSQL + pgvector (1536-dim embeddings), Next.js UI, and dynamic tool calling.</p>
+          <div class="card-actions">
+            <a href="./agentic-wiki/" class="btn-read">Read Article &rarr;</a>
+            <a href="https://github.com/Meezok-PJ/share/blob/main/notes/shared/build-a-local-agentic-wiki.md" target="_blank" rel="noopener" class="btn-source">View Markdown on GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Article 4: Agent Delegation -->
+      <article class="article-card">
+        <div>
+          <div class="badge-row">
+            <span class="badge">Agent Governance</span>
+            <span class="badge cyan">Zero-Trust</span>
+          </div>
+          <h2 class="article-title">
+            <a href="./agent-delegation/">Safely Delegating to Code Agents: Zero-Trust Workspace Architecture</a>
+          </h2>
+          <p class="article-summary">Contract-driven multi-agent orchestration, sanitized task packages, Linux bubblewrap sandbox isolation, and trusted human-in-the-loop Copilot steward handoffs.</p>
+          <div class="card-actions">
+            <a href="./agent-delegation/" class="btn-read">Read Article &rarr;</a>
+            <a href="https://github.com/Meezok-PJ/share/blob/main/docs/agent-delegation/index.html" target="_blank" rel="noopener" class="btn-source">View Markdown on GitHub</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>&copy; 2026 Mohammed Al-Balushi &bull; <a href="https://notes.meezok-lab.com" style="color:var(--cyan);text-decoration:none;">notes.meezok-lab.com</a></p>
+      <p><a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener" style="color:var(--emerald);text-decoration:none;font-weight:700;">Meezok-PJ/share Repository</a></p>
+    </div>
+  </footer>
+</body>
+</html>

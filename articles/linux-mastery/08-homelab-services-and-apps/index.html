@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Module 08 | Linux Academy</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #11131c;
+      --surface-hover: #171b28;
+      --border: #1f2433;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --emerald: #10b981;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+      --rose: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.75 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 24px 0; border-bottom: 1px solid var(--border); }
+    .brand-row { display: flex; justify-content: space-between; align-items: center; }
+    .brand { color: var(--muted); font-size: .88rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: .92rem; font-weight: 600; }
+    .nav-links a:hover { color: var(--emerald); }
+    
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--muted); margin: 24px 0 16px; }
+    .breadcrumbs a { color: var(--cyan); text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    
+    main { padding: 12px 0 80px; }
+    h1, h2, h3, h4 { line-height: 1.22; color: var(--text); letter-spacing: -.03em; }
+    h1 { font-size: clamp(2.2rem, 5.5vw, 3.4rem); margin: 0 0 16px; letter-spacing: -.04em; }
+    h2 { font-size: 1.8rem; margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.3rem; margin-top: 32px; color: #e2e8f0; }
+    
+    p, li { color: #d7dbe4; }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    
+    .safety-banner {
+      margin: 28px 0;
+      padding: 22px 24px;
+      background: linear-gradient(135deg, #1c1318 0%, #11131c 100%);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-left: 5px solid var(--rose);
+      border-radius: 10px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .safety-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .safety-title { font-weight: 800; font-size: 1.05rem; color: #fecdd3; margin-bottom: 4px; }
+    .safety-desc { color: #e2e8f0; font-size: 0.92rem; line-height: 1.6; }
+    
+    .callout {
+      margin: 28px 0;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--cyan);
+      background: var(--surface);
+      border-radius: 8px;
+    }
+    .callout.amber { border-left-color: var(--amber); }
+    .callout.emerald { border-left-color: var(--emerald); }
+    .callout-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; color: var(--text); }
+    
+    .motion-infographic {
+      margin: 36px 0;
+      padding: 28px 24px;
+      background: radial-gradient(circle at center, #111524 0%, #090b12 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .infographic-title {
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--emerald);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .infographic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .infographic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .infographic-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--cyan);
+      box-shadow: 0 10px 25px -8px rgba(6, 182, 212, 0.25);
+    }
+    .infographic-card:active { transform: scale(0.98); }
+    .infographic-card-title { font-weight: 700; font-size: 0.98rem; color: var(--text); margin-bottom: 8px; }
+    .infographic-card-desc { font-size: 0.88rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    
+    .figure-container {
+      margin: 32px 0;
+      background: #0d0f16;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow: hidden;
+    }
+    .figure-container img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .figure-caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: .88rem;
+      text-align: center;
+    }
+    
+    table { width: 100%; border-collapse: collapse; margin: 28px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); font-size: .95rem; }
+    th { background: var(--surface); color: var(--emerald); font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+    
+    code { color: #b8f6dc; background: #161a26; padding: .15em .4em; border-radius: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .9em; }
+    pre { overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: #0b0d13; }
+    pre code { padding: 0; background: transparent; font-size: .92em; }
+    
+    .module-nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    .btn-nav:hover {
+      border-color: var(--emerald);
+      color: var(--emerald);
+      transform: translateY(-2px);
+    }
+    .btn-nav.primary {
+      background: #062b22;
+      color: var(--emerald);
+      border-color: var(--emerald);
+    }
+    .btn-nav.primary:hover {
+      background: var(--emerald);
+      color: #062b22;
+    }
+    
+    footer { padding: 36px 0 54px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell brand-row">
+      <div class="brand">Linux Engineering &amp; Homelab Academy</div>
+      <div class="nav-links">
+        <a href="../">Academy Hub</a>
+        <a href="../../">Docs Home</a>
+        <a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="breadcrumbs">
+      <a href="../">Academy Hub</a> &rarr; <span>Module 08: Self-Hosted Homelab Services & Applications</span>
+    </div>
+
+    <h1>Module 08: Self-Hosted Homelab Services & Applications</h1>
+
+    <!-- SAFETY WARNING CALLOUT -->
+    <div class="safety-banner">
+      <div class="safety-icon">⚠️</div>
+      <div>
+        <div class="safety-title">Sandbox Environment Warning</div>
+        <div class="safety-desc">
+          Execute all commands and scripts strictly inside an isolated <strong>Virtual Machine sandbox</strong>. Never perform bulk permission changes, system removals, or daemon restarts on unbacked host environments.
+        </div>
+      </div>
+    </div>
+
+    
+<p style="font-size:1.1rem;color:#cbd5e1;">Self-hosted homelab applications and infrastructure: Fedora workstation host tuning, deploying CasaOS, running containerized Code-Server, Pi-hole network DNS ad-blocking, NetBird mesh VPN, and Ollama local AI hosting.</p>
+
+<hr>
+
+<h2>1. Fedora Host Post-Install &amp; Development Tuning</h2>
+<pre><code># 1. Enable fastest mirrors and parallel downloads in DNF
+sudo tee -a /etc/dnf/dnf.conf &lt;&lt; 'EOF'
+fastestmirror=True
+max_parallel_downloads=10
+defaultyes=True
+EOF
+
+# 2. Update all system packages
+sudo dnf upgrade --refresh -y
+
+# 3. Install Docker Engine on Fedora
+sudo dnf install -y dnf-plugins-core
+sudo dnf-3 config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER</code></pre>
+
+<hr>
+
+<h2>2. Deploying CasaOS &amp; Containerized Code-Server</h2>
+<p><a href="https://casaos.io/" target="_blank" rel="noopener">CasaOS</a> is a lightweight, elegant home cloud management system that turns any headless Ubuntu/Debian server into an intuitive app dashboard:</p>
+
+<pre><code># Install CasaOS with a single curl script
+curl -fsSL https://get.casaos.io | sudo bash</code></pre>
+
+<p>Once installed, navigate to <code>http://&lt;VM-IP-ADDRESS&gt;</code> in your browser to access the CasaOS dashboard.</p>
+
+<div class="figure-container">
+  <img src="../../../assets/linux/casaos/cb9fc1db30418fa3a5aec9cdb2f931d6.png" alt="CasaOS Home Dashboard">
+  <div class="figure-caption">Figure 1: CasaOS web management dashboard displaying system health, CPU/RAM meters, and installed containers.</div>
+</div>
+
+<h3>Deploying Code-Server (VS Code in the Browser)</h3>
+<p>From the CasaOS App Store (or via Docker Compose), deploy <code>linuxserver/code-server</code> to run a full Visual Studio Code IDE accessible from any web browser on your network:</p>
+
+<pre><code>services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - PASSWORD=mysecretpassword
+    volumes:
+      - /home/meezok/workspace:/config/workspace
+    ports:
+      - 8443:8443
+    restart: unless-stopped</code></pre>
+
+<div class="figure-container">
+  <img src="../../../assets/linux/casaos/7e18d4b2f96ec7f29449e56c18686a59.png" alt="Code-Server Web IDE running in CasaOS">
+  <div class="figure-caption">Figure 2: Remote containerized VS Code development environment running on Ubuntu Server.</div>
+</div>
+
+<hr>
+
+<h2>3. Network-Wide Ad-Blocking with Pi-hole DNS</h2>
+<pre><code>services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8088:80/tcp"
+    environment:
+      TZ: 'UTC'
+      WEBPASSWORD: 'adminpassword'
+    volumes:
+      - './etc-pihole:/etc/pihole'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+    restart: unless-stopped</code></pre>
+
+<hr>
+
+<h2>4. Local AI Model Hosting with Ollama</h2>
+<pre><code># Install Ollama on Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull and run local vision & reasoning models
+ollama run qwen3-vl:8b
+ollama run deepseek-r1:8b</code></pre>
+
+<div class="callout emerald">
+  <div class="callout-title">Academy Completion Milestone</div>
+  <p>Congratulations! You have completed all 8 modules of the Linux Sysadmin, Homelab &amp; Container Engineering Academy. You now possess production-ready skills spanning virtual machines, shell environments, UNIX pipelines, permissions, systemd, storage, Docker container orchestration, and homelab services.</p>
+</div>
+
+
+    <!-- MODULE NAVIGATION -->
+    <div class="module-nav-bar">
+      <a href="../07-docker-and-container-engineering/" class="btn-nav">&larr; Module 07 (Docker)</a>
+      <a href="../" class="btn-nav primary">Back to Academy Hub &rarr;</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>&copy; 2026 Mohammed Al-Balushi &bull; <a href="https://notes.meezok-lab.com" style="color:var(--cyan);text-decoration:none;">notes.meezok-lab.com</a></p>
+      <p><a href="https://github.com/Meezok-PJ/share" target="_blank" rel="noopener" style="color:var(--emerald);text-decoration:none;font-weight:700;">Meezok-PJ/share Repository</a></p>
+    </div>
+  </footer>
+</body>
+</html>

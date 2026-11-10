@@ -292,6 +292,52 @@ docker exec gitea id
     <blockquote class="callout-warn">
       <strong>Hardening Tip:</strong> For private homelab or internal engineering servers, lock down public self-registration after creating your user accounts by setting <code>DISABLE_REGISTRATION = true</code> and <code>REQUIRE_SIGNIN_VIEW = true</code> under the <code>[service]</code> section of <code>~/gitea/config/app.ini</code>.
     </blockquote>
+
+    <h2>7. Connecting Cursor IDE &amp; Local Git via SSH (Port 2222)</h2>
+    <p>
+      Because the rootless container runs its built-in Go SSH server on port <code>2222</code> (keeping the host's OpenSSH daemon untouched on port <code>22</code>), Git-over-SSH connections use the explicit <code>ssh://git@&lt;host&gt;:2222/&lt;owner&gt;/&lt;repo&gt;.git</code> URI format.
+    </p>
+
+    <h3>Step 1: Generate an SSH Key &amp; Register It in Gitea</h3>
+    <p>
+      On your development workstation, generate a dedicated Ed25519 key pair and copy the public key:
+    </p>
+    <pre><code>ssh-keygen -t ed25519 -C "cursor-gitea-key" -f ~/.ssh/gitea_ed25519 -N ""
+cat ~/.ssh/gitea_ed25519.pub</code></pre>
+    <p>
+      In Gitea, click your top-right profile avatar, navigate to <strong>Settings &rarr; SSH / GPG Keys &rarr; Add Key</strong>, paste the public key, and click <strong>Add Key</strong>.
+    </p>
+
+    <h3>Step 2: Configure <code>~/.ssh/config</code> on Your Workstation</h3>
+    <p>
+      Add a host block to <code>~/.ssh/config</code> so both terminal <code>git</code> and <strong>Cursor IDE</strong> automatically route port <code>2222</code> traffic with your Gitea identity file:
+    </p>
+    <pre><code>Host gitea.homelab.local
+    HostName gitea.homelab.local
+    User git
+    Port 2222
+    IdentityFile ~/.ssh/gitea_ed25519
+    IdentitiesOnly yes</code></pre>
+    <p>
+      Verify the SSH handshake on port <code>2222</code>:
+    </p>
+    <pre><code>chmod 600 ~/.ssh/config
+ssh -T -p 2222 git@gitea.homelab.local
+# Hi there, git-admin! You've successfully authenticated with the key named Cursor-Workstation, but Gitea does not provide shell access.</code></pre>
+
+    <h3>Step 3: Clone or Push from Cursor IDE</h3>
+    <p>
+      To link an existing local project open in Cursor, run the following in Cursor's integrated terminal (<code>Ctrl+`</code>):
+    </p>
+    <pre><code>git init
+git branch -M main
+git remote add origin ssh://git@gitea.homelab.local:2222/git-admin/ISTER.git
+git add .
+git commit -m "feat: initial project commit"
+git push -u origin main</code></pre>
+    <p>
+      Or to clone directly from Cursor's UI, press <code>Ctrl+Shift+P</code> (<code>Cmd+Shift+P</code> on macOS), select <strong>Git: Clone</strong>, and paste <code>ssh://git@gitea.homelab.local:2222/git-admin/ISTER.git</code>.
+    </p>
   </main>
 
   <footer>

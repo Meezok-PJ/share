@@ -209,3 +209,65 @@ For private homelab or internal team deployments, disable self-registration and 
 DISABLE_REGISTRATION = true
 REQUIRE_SIGNIN_VIEW  = true
 ```
+
+---
+
+## 7. Connecting Cursor IDE and Local Git via SSH (Port 2222)
+
+Because Gitea Rootless runs its built-in Go SSH server on port `2222` (while the host OpenSSH daemon remains on port `22`), SSH repository URLs use the `ssh://git@<gitea-host>:2222/<owner>/<repo>.git` syntax.
+
+### Step 1: Generate an SSH Key and Register It in Gitea
+
+On your development workstation, generate a dedicated Ed25519 SSH key for Gitea:
+
+```bash
+ssh-keygen -t ed25519 -C "cursor-gitea-key" -f ~/.ssh/gitea_ed25519 -N ""
+cat ~/.ssh/gitea_ed25519.pub
+```
+
+In the Gitea web interface, navigate to **Profile Avatar -> Settings -> SSH / GPG Keys -> Add Key**, paste the public key contents, and save.
+
+### Step 2: Configure `~/.ssh/config` for Port 2222
+
+Add an entry to `~/.ssh/config` on your workstation so both terminal `git` and **Cursor IDE** automatically select your Gitea key and port `2222`:
+
+```sshconfig
+# Alias for Gitea Rootless SSH on port 2222
+Host gitea.homelab.local
+    HostName gitea.homelab.local
+    User git
+    Port 2222
+    IdentityFile ~/.ssh/gitea_ed25519
+    IdentitiesOnly yes
+```
+
+Test the SSH authentication handshake:
+
+```bash
+chmod 600 ~/.ssh/config
+ssh -T -p 2222 git@gitea.homelab.local
+# Output: Hi there, git-admin! You've successfully authenticated with the key named Cursor-Workstation, but Gitea does not provide shell access.
+```
+
+### Step 3: Push or Clone in Cursor IDE
+
+#### Option A: Connect an Existing Local Project in Cursor Terminal (`Ctrl+\``)
+
+```bash
+git init
+git branch -M main
+git remote add origin ssh://git@gitea.homelab.local:2222/git-admin/ISTER.git
+git add .
+git commit -m "feat: initial commit"
+git push -u origin main
+```
+
+#### Option B: Clone via Cursor Command Palette
+
+1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) and run **Git: Clone**.
+2. Enter the full SSH URI with port `2222`:
+   ```text
+   ssh://git@gitea.homelab.local:2222/git-admin/ISTER.git
+   ```
+3. Choose your local workspace folder and click **Open**. Cursor's Source Control view (`Ctrl+Shift+G`) will push and pull directly over SSH port `2222`.
+

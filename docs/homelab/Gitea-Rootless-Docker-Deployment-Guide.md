@@ -129,3 +129,34 @@ networks:
 2. Inspect **Site Administration -> Configuration -> Summary** (`/admin/config`) to confirm rootless execution (`Run As Username: git`) and built-in SSH server activation:
 
 ![Gitea Site Administration Summary](images/gitea-rootless-06-site-admin.png)
+
+---
+
+## 6. Connecting Cursor IDE and Local Git via SSH (Port 2222)
+
+1. Generate a dedicated Ed25519 SSH key on your workstation and upload the `.pub` key to **Gitea -> Settings -> SSH / GPG Keys**:
+
+```bash
+ssh-keygen -t ed25519 -C "cursor-gitea-key" -f ~/.ssh/gitea_ed25519 -N ""
+cat ~/.ssh/gitea_ed25519.pub
+```
+
+2. Add the host configuration in `~/.ssh/config` so Cursor IDE and Git automatically use port `2222` and your Gitea key:
+
+```sshconfig
+Host gitea.homelab.local
+    HostName gitea.homelab.local
+    User git
+    Port 2222
+    IdentityFile ~/.ssh/gitea_ed25519
+    IdentitiesOnly yes
+```
+
+3. Verify the SSH connection and connect your repository inside Cursor's terminal (`Ctrl+\``) or via **Git: Clone** (`Ctrl+Shift+P`):
+
+```bash
+ssh -T -p 2222 git@gitea.homelab.local
+git remote add origin ssh://git@gitea.homelab.local:2222/git-admin/ISTER.git
+git push -u origin main
+```
+
